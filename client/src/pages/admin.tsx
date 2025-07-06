@@ -37,6 +37,14 @@ interface ProductFormData {
   status: 'active' | 'inactive';
 }
 
+// Helper to get headers for fetch (never undefined)
+const getHeaders = () => {
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+};
+
 function ProductForm({ product, onSuccess }: { product?: Product; onSuccess: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,12 +62,14 @@ function ProductForm({ product, onSuccess }: { product?: Product; onSuccess: () 
 
   const mutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
-      const token = localStorage.getItem('token');
       const url = product ? `/api/products/${product.id}` : '/api/products';
       const method = product ? 'PUT' : 'POST';
-      
-      const response = await apiRequest(method, url, data, {
-        headers: { Authorization: `Bearer ${token}` }
+      const headers = { ...getHeaders(), 'Content-Type': 'application/json' };
+      const payload = { ...data, price: String(data.price) };
+      const response = await fetch(url, {
+        method,
+        headers,
+        body: JSON.stringify(payload),
       });
       
       if (!response.ok) {
@@ -177,9 +187,10 @@ function ProductForm({ product, onSuccess }: { product?: Product; onSuccess: () 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Fashion">Fashion</SelectItem>
+                  <SelectItem value="Clothing">Clothing</SelectItem>
+                  <SelectItem value="Books">Books</SelectItem>
                   <SelectItem value="Home & Garden">Home & Garden</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
+                  <SelectItem value="Sports & Fitness">Sports & Fitness</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -228,18 +239,13 @@ export default function AdminPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/stats', undefined, {
-        headers: getAuthHeaders()
+      const response = await fetch('/api/admin/stats', {
+        headers: getHeaders()
       });
       return response.json();
     },
@@ -251,8 +257,7 @@ export default function AdminPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchQuery) params.append('search', searchQuery);
-      if (categoryFilter) params.append('category', categoryFilter);
-      
+      if (categoryFilter && categoryFilter !== 'all') params.append('category', categoryFilter);
       const response = await apiRequest('GET', `/api/products?${params}`);
       return response.json();
     },
@@ -261,8 +266,8 @@ export default function AdminPage() {
   const { data: orders = [] } = useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/orders', undefined, {
-        headers: getAuthHeaders()
+      const response = await fetch('/api/orders', {
+        headers: getHeaders()
       });
       return response.json();
     },
@@ -271,8 +276,9 @@ export default function AdminPage() {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const response = await apiRequest('DELETE', `/api/products/${productId}`, undefined, {
-        headers: getAuthHeaders()
+      const response = await fetch(`/api/products/${productId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
       });
       
       if (!response.ok) {
@@ -331,7 +337,7 @@ export default function AdminPage() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Sales</p>
                 <p className="text-2xl font-bold text-secondary">
-                  ${stats?.totalSales?.toFixed(2) || '0.00'}
+                  ₹{Number(stats?.totalSales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                 </p>
               </div>
               <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
@@ -407,11 +413,12 @@ export default function AdminPage() {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Fashion">Fashion</SelectItem>
+                  <SelectItem value="Clothing">Clothing</SelectItem>
+                  <SelectItem value="Books">Books</SelectItem>
                   <SelectItem value="Home & Garden">Home & Garden</SelectItem>
-                  <SelectItem value="Sports">Sports</SelectItem>
+                  <SelectItem value="Sports & Fitness">Sports & Fitness</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -445,7 +452,7 @@ export default function AdminPage() {
                     </div>
                   </TableCell>
                   <TableCell>{product.category}</TableCell>
-                  <TableCell>${product.price.toFixed(2)}</TableCell>
+                  <TableCell>₹{Number(product.price).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
                     <Badge variant={product.status === 'active' ? 'default' : 'secondary'}>
@@ -498,7 +505,7 @@ export default function AdminPage() {
                   <TableCell className="font-medium">#{order.id.slice(-6)}</TableCell>
                   <TableCell>{order.shippingAddress.firstName} {order.shippingAddress.lastName}</TableCell>
                   <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
-                  <TableCell>${order.total.toFixed(2)}</TableCell>
+                  <TableCell>₹{Number(order.total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</TableCell>
                   <TableCell>
                     <Badge variant={order.status === 'pending' ? 'secondary' : 'default'}>
                       {order.status}
