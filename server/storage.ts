@@ -1,7 +1,4 @@
-import { nanoid } from "nanoid";
 import { users, products, cartItems, orders, type User, type InsertUser, type Product, type InsertProduct, type CartItem, type InsertCartItem, type Order, type InsertOrder } from "@shared/schema";
-import { db } from "./db";
-import { eq, like, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -52,7 +49,7 @@ class MemStorage implements IStorage {
       {
         name: "Premium Wireless Headphones",
         description: "High-quality sound with noise cancellation",
-        price: 199.99,
+        price: "199.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
         stock: 45,
@@ -62,7 +59,7 @@ class MemStorage implements IStorage {
       {
         name: "Smart Fitness Watch",
         description: "Track your health and fitness goals",
-        price: 299.99,
+        price: "299.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
         stock: 12,
@@ -72,7 +69,7 @@ class MemStorage implements IStorage {
       {
         name: "Ultra-Thin Laptop",
         description: "Powerful performance in a sleek design",
-        price: 1299.99,
+        price: "1299.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop",
         stock: 8,
@@ -82,7 +79,7 @@ class MemStorage implements IStorage {
       {
         name: "Professional Camera",
         description: "Capture memories in stunning detail",
-        price: 899.99,
+        price: "899.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=300&fit=crop",
         stock: 15,
@@ -92,7 +89,7 @@ class MemStorage implements IStorage {
       {
         name: "Pro Tablet",
         description: "Perfect for work and entertainment",
-        price: 599.99,
+        price: "599.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=300&fit=crop",
         stock: 25,
@@ -102,7 +99,7 @@ class MemStorage implements IStorage {
       {
         name: "Mechanical Keyboard",
         description: "Premium typing experience",
-        price: 159.99,
+        price: "159.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&h=300&fit=crop",
         stock: 30,
@@ -112,7 +109,7 @@ class MemStorage implements IStorage {
       {
         name: "4K Monitor",
         description: "Crystal clear display quality",
-        price: 399.99,
+        price: "399.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&h=300&fit=crop",
         stock: 18,
@@ -122,7 +119,7 @@ class MemStorage implements IStorage {
       {
         name: "Wireless Earbuds",
         description: "Compact and powerful audio",
-        price: 149.99,
+        price: "149.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=400&h=300&fit=crop",
         stock: 50,
@@ -132,7 +129,7 @@ class MemStorage implements IStorage {
       {
         name: "Gaming Mouse",
         description: "Precision for gaming and work",
-        price: 79.99,
+        price: "79.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=300&fit=crop",
         stock: 40,
@@ -142,7 +139,7 @@ class MemStorage implements IStorage {
       {
         name: "Smartphone",
         description: "Latest technology in your pocket",
-        price: 699.99,
+        price: "699.99",
         category: "Electronics",
         imageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=300&fit=crop",
         stock: 22,
@@ -161,23 +158,27 @@ class MemStorage implements IStorage {
       password: "admin123",
       firstName: "Admin",
       lastName: "User",
-      role: "admin"
+      role: "admin" as const
     });
   }
 
   // User methods
   async createUser(userData: InsertUser): Promise<User> {
     const user: User = {
-      id: nanoid(),
-      ...userData,
+      id: this.users.size + 1, // Use numeric ID to match database
+      email: userData.email,
+      password: userData.password,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      role: (userData.role || "user") as "user" | "admin",
       createdAt: new Date(),
     };
-    this.users.set(user.id, user);
+    this.users.set(user.id.toString(), user);
     return user;
   }
 
-  async getUserById(id: string): Promise<User | null> {
-    return this.users.get(id) || null;
+  async getUserById(id: number): Promise<User | null> {
+    return this.users.get(id.toString()) || null;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
@@ -189,17 +190,17 @@ class MemStorage implements IStorage {
     return null;
   }
 
-  async updateUser(id: string, userData: Partial<User>): Promise<User | null> {
-    const user = this.users.get(id);
+  async updateUser(id: number, userData: Partial<User>): Promise<User | null> {
+    const user = this.users.get(id.toString());
     if (!user) return null;
 
     const updatedUser = { ...user, ...userData };
-    this.users.set(id, updatedUser);
+    this.users.set(id.toString(), updatedUser);
     return updatedUser;
   }
 
-  async deleteUser(id: string): Promise<boolean> {
-    return this.users.delete(id);
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id.toString());
   }
 
   async getAllUsers(): Promise<User[]> {
@@ -209,33 +210,40 @@ class MemStorage implements IStorage {
   // Product methods
   async createProduct(productData: InsertProduct): Promise<Product> {
     const product: Product = {
-      id: nanoid(),
-      ...productData,
+      id: this.products.size + 1, // Use numeric ID to match database
+      name: productData.name,
+      description: productData.description,
+      price: productData.price,
+      category: productData.category,
+      imageUrl: productData.imageUrl,
+      stock: productData.stock || 0,
+      sku: productData.sku,
+      status: (productData.status || "active") as "active" | "inactive",
       createdAt: new Date(),
     };
-    this.products.set(product.id, product);
+    this.products.set(product.id.toString(), product);
     return product;
   }
 
-  async getProductById(id: string): Promise<Product | null> {
-    return this.products.get(id) || null;
+  async getProductById(id: number): Promise<Product | null> {
+    return this.products.get(id.toString()) || null;
   }
 
   async getAllProducts(): Promise<Product[]> {
     return Array.from(this.products.values());
   }
 
-  async updateProduct(id: string, productData: Partial<Product>): Promise<Product | null> {
-    const product = this.products.get(id);
+  async updateProduct(id: number, productData: Partial<Product>): Promise<Product | null> {
+    const product = this.products.get(id.toString());
     if (!product) return null;
 
     const updatedProduct = { ...product, ...productData };
-    this.products.set(id, updatedProduct);
+    this.products.set(id.toString(), updatedProduct);
     return updatedProduct;
   }
 
-  async deleteProduct(id: string): Promise<boolean> {
-    return this.products.delete(id);
+  async deleteProduct(id: number): Promise<boolean> {
+    return this.products.delete(id.toString());
   }
 
   async searchProducts(query: string): Promise<Product[]> {
@@ -262,37 +270,37 @@ class MemStorage implements IStorage {
     if (existingItem) {
       // Update quantity
       existingItem.quantity += cartItemData.quantity;
-      this.cartItems.set(existingItem.id, existingItem);
+      this.cartItems.set(existingItem.id.toString(), existingItem);
       return existingItem;
     }
 
     const cartItem: CartItem = {
-      id: nanoid(),
+      id: this.cartItems.size + 1, // Use numeric ID to match database
       ...cartItemData,
       createdAt: new Date(),
     };
-    this.cartItems.set(cartItem.id, cartItem);
+    this.cartItems.set(cartItem.id.toString(), cartItem);
     return cartItem;
   }
 
-  async getCartByUserId(userId: string): Promise<CartItem[]> {
+  async getCartByUserId(userId: number): Promise<CartItem[]> {
     return Array.from(this.cartItems.values()).filter(item => item.userId === userId);
   }
 
-  async updateCartItem(id: string, quantity: number): Promise<CartItem | null> {
-    const cartItem = this.cartItems.get(id);
+  async updateCartItem(id: number, quantity: number): Promise<CartItem | null> {
+    const cartItem = this.cartItems.get(id.toString());
     if (!cartItem) return null;
 
     cartItem.quantity = quantity;
-    this.cartItems.set(id, cartItem);
+    this.cartItems.set(id.toString(), cartItem);
     return cartItem;
   }
 
-  async removeFromCart(id: string): Promise<boolean> {
-    return this.cartItems.delete(id);
+  async removeFromCart(id: number): Promise<boolean> {
+    return this.cartItems.delete(id.toString());
   }
 
-  async clearCart(userId: string): Promise<boolean> {
+  async clearCart(userId: number): Promise<boolean> {
     const userCartItems = Array.from(this.cartItems.entries()).filter(
       ([_, item]) => item.userId === userId
     );
@@ -307,19 +315,27 @@ class MemStorage implements IStorage {
   // Order methods
   async createOrder(orderData: InsertOrder): Promise<Order> {
     const order: Order = {
-      id: nanoid(),
-      ...orderData,
+      id: this.orders.size + 1, // Use numeric ID to match database
+      userId: orderData.userId,
+      items: orderData.items,
+      subtotal: orderData.subtotal,
+      tax: orderData.tax,
+      shipping: orderData.shipping,
+      total: orderData.total,
+      status: (orderData.status || "pending") as "pending" | "processing" | "shipped" | "delivered" | "cancelled",
+      shippingAddress: orderData.shippingAddress,
+      paymentIntentId: orderData.paymentIntentId || null,
       createdAt: new Date(),
     };
-    this.orders.set(order.id, order);
+    this.orders.set(order.id.toString(), order);
     return order;
   }
 
-  async getOrderById(id: string): Promise<Order | null> {
-    return this.orders.get(id) || null;
+  async getOrderById(id: number): Promise<Order | null> {
+    return this.orders.get(id.toString()) || null;
   }
 
-  async getOrdersByUserId(userId: string): Promise<Order[]> {
+  async getOrdersByUserId(userId: number): Promise<Order[]> {
     return Array.from(this.orders.values()).filter(order => order.userId === userId);
   }
 
@@ -327,12 +343,12 @@ class MemStorage implements IStorage {
     return Array.from(this.orders.values());
   }
 
-  async updateOrderStatus(id: string, status: Order['status']): Promise<Order | null> {
-    const order = this.orders.get(id);
+  async updateOrderStatus(id: number, status: Order['status']): Promise<Order | null> {
+    const order = this.orders.get(id.toString());
     if (!order) return null;
 
     order.status = status;
-    this.orders.set(id, order);
+    this.orders.set(id.toString(), order);
     return order;
   }
 }

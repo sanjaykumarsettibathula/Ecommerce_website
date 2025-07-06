@@ -3,7 +3,7 @@ import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
-  id: string;
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token');
     if (token) {
       // Validate token and get user info
-      apiRequest('GET', '/api/auth/me', undefined, {
+      fetch('/api/auth/me', {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(response => response.json())
