@@ -155,7 +155,7 @@ export default function HomePage() {
                     <div className="flex-1">
                       <h3 className="font-medium text-secondary">{product.name}</h3>
                       <p className="text-sm text-gray-600">{product.reason}</p>
-                      <span className="text-primary font-semibold">${product.price.toFixed(2)}</span>
+                      <span className="text-primary font-semibold">${parseFloat(product.price).toFixed(2)}</span>
                     </div>
                   </div>
                 </CardContent>

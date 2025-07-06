@@ -1,37 +1,39 @@
 import { nanoid } from "nanoid";
-import type { User, InsertUser, Product, InsertProduct, CartItem, InsertCartItem, Order, InsertOrder } from "@shared/schema";
+import { users, products, cartItems, orders, type User, type InsertUser, type Product, type InsertProduct, type CartItem, type InsertCartItem, type Order, type InsertOrder } from "@shared/schema";
+import { db } from "./db";
+import { eq, like, and } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
   createUser(user: InsertUser): Promise<User>;
-  getUserById(id: string): Promise<User | null>;
+  getUserById(id: number): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
-  updateUser(id: string, user: Partial<User>): Promise<User | null>;
-  deleteUser(id: string): Promise<boolean>;
+  updateUser(id: number, user: Partial<User>): Promise<User | null>;
+  deleteUser(id: number): Promise<boolean>;
   getAllUsers(): Promise<User[]>;
 
   // Product methods
   createProduct(product: InsertProduct): Promise<Product>;
-  getProductById(id: string): Promise<Product | null>;
+  getProductById(id: number): Promise<Product | null>;
   getAllProducts(): Promise<Product[]>;
-  updateProduct(id: string, product: Partial<Product>): Promise<Product | null>;
-  deleteProduct(id: string): Promise<boolean>;
+  updateProduct(id: number, product: Partial<Product>): Promise<Product | null>;
+  deleteProduct(id: number): Promise<boolean>;
   searchProducts(query: string): Promise<Product[]>;
   getProductsByCategory(category: string): Promise<Product[]>;
 
   // Cart methods
   addToCart(cartItem: InsertCartItem): Promise<CartItem>;
-  getCartByUserId(userId: string): Promise<CartItem[]>;
-  updateCartItem(id: string, quantity: number): Promise<CartItem | null>;
-  removeFromCart(id: string): Promise<boolean>;
-  clearCart(userId: string): Promise<boolean>;
+  getCartByUserId(userId: number): Promise<CartItem[]>;
+  updateCartItem(id: number, quantity: number): Promise<CartItem | null>;
+  removeFromCart(id: number): Promise<boolean>;
+  clearCart(userId: number): Promise<boolean>;
 
   // Order methods
   createOrder(order: InsertOrder): Promise<Order>;
-  getOrderById(id: string): Promise<Order | null>;
-  getOrdersByUserId(userId: string): Promise<Order[]>;
+  getOrderById(id: number): Promise<Order | null>;
+  getOrdersByUserId(userId: number): Promise<Order[]>;
   getAllOrders(): Promise<Order[]>;
-  updateOrderStatus(id: string, status: Order['status']): Promise<Order | null>;
+  updateOrderStatus(id: number, status: Order['status']): Promise<Order | null>;
 }
 
 class MemStorage implements IStorage {
@@ -335,4 +337,6 @@ class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./database-storage";
+
+export const storage = new DatabaseStorage();

@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { seedDatabase } from "./seed";
 
 const app = express();
 app.use(express.json());
@@ -20,6 +21,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 (async () => {
+  // Seed the database first
+  try {
+    await seedDatabase();
+  } catch (error) {
+    console.error('Failed to seed database:', error);
+  }
+
   const server = await registerRoutes(app);
 
   // Environment check

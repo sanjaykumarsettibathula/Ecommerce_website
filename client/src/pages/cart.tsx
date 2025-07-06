@@ -84,7 +84,7 @@ export default function CartPage() {
                         {item.product.name}
                       </h3>
                       <p className="text-sm text-gray-600 mb-2">
-                        ${item.product.price.toFixed(2)} each
+                        ${parseFloat(item.product.price).toFixed(2)} each
                       </p>
                       
                       <div className="flex items-center space-x-4">
