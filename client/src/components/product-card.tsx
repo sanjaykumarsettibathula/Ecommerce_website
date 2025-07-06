@@ -106,7 +106,7 @@ export default function ProductCard({
         
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-primary">
-            ${parseFloat(product.price).toFixed(2)}
+            ₹{Number(product.price).toLocaleString('en-IN')}
           </span>
           
           <Button 

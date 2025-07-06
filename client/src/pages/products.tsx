@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('featured');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
@@ -33,16 +34,18 @@ export default function ProductsPage() {
 
   const categories = [
     'Electronics',
-    'Fashion',
+    'Clothing',
+    'Books',
     'Home & Garden',
-    'Sports',
+    'Sports & Fitness',
   ];
 
   const priceRanges = [
-    { label: 'Under $50', value: 'under-50' },
-    { label: '$50 - $100', value: '50-100' },
-    { label: '$100 - $500', value: '100-500' },
-    { label: 'Over $500', value: 'over-500' },
+    { label: 'Under ₹1,000', value: 'under-1000', min: 0, max: 999 },
+    { label: '₹1,000 - ₹5,000', value: '1000-5000', min: 1000, max: 4999 },
+    { label: '₹5,000 - ₹20,000', value: '5000-20000', min: 5000, max: 19999 },
+    { label: '₹20,000 - ₹50,000', value: '20000-50000', min: 20000, max: 49999 },
+    { label: 'Over ₹50,000', value: 'over-50000', min: 50000, max: Infinity },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
@@ -50,12 +53,34 @@ export default function ProductsPage() {
     // Search is handled by the query key dependency
   };
 
-  const sortedProducts = [...products].sort((a, b) => {
+  // Filter products based on price ranges
+  const filteredProducts = products.filter((product: any) => {
+    const price = Number(product.price);
+    
+    // Category filter
+    if (selectedCategory && product.category !== selectedCategory) {
+      return false;
+    }
+    
+    // Price range filter
+    if (selectedPriceRanges.length > 0) {
+      const matchesPriceRange = selectedPriceRanges.some(rangeValue => {
+        const range = priceRanges.find(r => r.value === rangeValue);
+        if (!range) return false;
+        return price >= range.min && price <= range.max;
+      });
+      if (!matchesPriceRange) return false;
+    }
+    
+    return true;
+  });
+
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price - b.price;
+        return Number(a.price) - Number(b.price);
       case 'price-high':
-        return b.price - a.price;
+        return Number(b.price) - Number(a.price);
       case 'name':
         return a.name.localeCompare(b.name);
       default:
@@ -78,7 +103,17 @@ export default function ProductsPage() {
                 <div className="space-y-2">
                   {priceRanges.map((range) => (
                     <div key={range.value} className="flex items-center space-x-2">
-                      <Checkbox id={range.value} />
+                      <Checkbox 
+                        id={range.value}
+                        checked={selectedPriceRanges.includes(range.value)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedPriceRanges([...selectedPriceRanges, range.value]);
+                          } else {
+                            setSelectedPriceRanges(selectedPriceRanges.filter(r => r !== range.value));
+                          }
+                        }}
+                      />
                       <label htmlFor={range.value} className="text-sm">
                         {range.label}
                       </label>
@@ -116,6 +151,7 @@ export default function ProductsPage() {
                 onClick={() => {
                   setSearchQuery('');
                   setSelectedCategory('');
+                  setSelectedPriceRanges([]);
                 }}
               >
                 Clear All Filters
