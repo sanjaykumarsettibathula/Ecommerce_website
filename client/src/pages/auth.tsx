@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
@@ -43,6 +43,57 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Handle Google OAuth token in query params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    const error = params.get('error');
+    
+    if (error) {
+      toast({
+        title: 'Authentication Error',
+        description: error === 'GoogleAuthFailed' ? 'Google authentication failed' : 
+                    error === 'NoUser' ? 'No user found' :
+                    error === 'TokenGenerationFailed' ? 'Failed to generate authentication token' :
+                    'Authentication failed',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (token) {
+      localStorage.setItem('token', token);
+      // Fetch user data and update auth state
+      fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to validate token');
+          }
+          return response.json();
+        })
+        .then(userData => {
+          console.log('Google OAuth successful:', userData);
+          toast({
+            title: 'Success',
+            description: 'Successfully signed in with Google',
+          });
+          // Update auth context by triggering a page reload
+          window.location.href = '/';
+        })
+        .catch((error) => {
+          console.error('Google OAuth error:', error);
+          localStorage.removeItem('token');
+          toast({
+            title: 'Error',
+            description: 'Failed to authenticate with Google',
+            variant: 'destructive',
+          });
+        });
+    }
+  }, [toast]);
+
   // Redirect if already logged in
   if (user) {
     navigate('/');
@@ -76,6 +127,7 @@ export default function AuthPage() {
       navigate('/');
     } catch (error) {
       // Error handling is done in the auth context
+      console.error('Login error:', error);
     }
   };
 
@@ -90,6 +142,7 @@ export default function AuthPage() {
       navigate('/');
     } catch (error) {
       // Error handling is done in the auth context
+      console.error('Register error:', error);
     }
   };
 
@@ -211,24 +264,15 @@ export default function AuthPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-2 mb-4">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => handleSocialLogin('Google')}
-                  className="flex items-center justify-center"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => window.location.href = '/api/auth/google'}
                 >
-                  <FaGoogle className="text-red-500 mr-2" />
-                  Google
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleSocialLogin('Facebook')}
-                  className="flex items-center justify-center"
-                >
-                  <FaFacebook className="text-blue-600 mr-2" />
-                  Facebook
+                  <FaGoogle className="w-5 h-5" />
+                  Continue with Google
                 </Button>
               </div>
             </form>
@@ -353,10 +397,17 @@ export default function AuthPage() {
               </div>
 
               <div className="flex items-start space-x-2">
-                <Checkbox
-                  id="agree-terms"
-                  {...registerForm.register('agreeToTerms')}
-                  className="mt-1"
+                <Controller
+                  control={registerForm.control}
+                  name="agreeToTerms"
+                  render={({ field }) => (
+                    <Checkbox
+                      id="agree-terms"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="mt-1"
+                    />
+                  )}
                 />
                 <Label htmlFor="agree-terms" className="text-sm text-gray-600 leading-relaxed">
                   I agree to the{' '}

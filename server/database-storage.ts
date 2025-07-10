@@ -1,12 +1,15 @@
-import { users, products, cartItems, orders, type User, type InsertUser, type Product, type InsertProduct, type CartItem, type InsertCartItem, type Order, type InsertOrder } from "@shared/schema";
+import { users, products, cartItems, orders, type User, type InsertUser, type Product, type InsertProduct, type CartItem, type InsertCartItem, type Order, type InsertOrder, wishlist } from "@shared/schema";
 import { db } from "./db";
-import { eq, like, and } from "drizzle-orm";
+import { eq, like, and, inArray, or, sql } from "drizzle-orm";
 import type { IStorage } from "./storage";
 
 export class DatabaseStorage implements IStorage {
   // User methods
   async createUser(userData: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(userData).returning();
+    const [user] = await db.insert(users).values({
+      ...userData,
+      role: (userData.role || "user") as "user" | "admin",
+    }).returning();
     return user;
   }
 
@@ -36,7 +39,10 @@ export class DatabaseStorage implements IStorage {
 
   // Product methods
   async createProduct(productData: InsertProduct): Promise<Product> {
-    const [product] = await db.insert(products).values(productData).returning();
+    const [product] = await db.insert(products).values({
+      ...productData,
+      status: (productData.status || "active") as "active" | "inactive",
+    }).returning();
     return product;
   }
 
@@ -56,13 +62,18 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProduct(id: number): Promise<boolean> {
     const result = await db.delete(products).where(eq(products.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async searchProducts(query: string): Promise<Product[]> {
     const lowercaseQuery = `%${query.toLowerCase()}%`;
     return db.select().from(products).where(
-      like(products.name, lowercaseQuery)
+      or(
+        sql`LOWER(${products.name}) LIKE ${lowercaseQuery}`,
+        sql`LOWER(${products.description}) LIKE ${lowercaseQuery}`,
+        sql`LOWER(${products.category}) LIKE ${lowercaseQuery}`,
+        sql`LOWER(${products.sku}) LIKE ${lowercaseQuery}`
+      )
     );
   }
 
@@ -100,17 +111,20 @@ export class DatabaseStorage implements IStorage {
 
   async removeFromCart(id: number): Promise<boolean> {
     const result = await db.delete(cartItems).where(eq(cartItems.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async clearCart(userId: number): Promise<boolean> {
     const result = await db.delete(cartItems).where(eq(cartItems.userId, userId));
-    return result.rowCount >= 0; // true even if no items were deleted
+    return (result.rowCount ?? 0) >= 0;
   }
 
   // Order methods
   async createOrder(orderData: InsertOrder): Promise<Order> {
-    const [order] = await db.insert(orders).values(orderData).returning();
+    const [order] = await db.insert(orders).values({
+      ...orderData,
+      status: (orderData.status || "pending") as "pending" | "processing" | "shipped" | "delivered" | "cancelled",
+    }).returning();
     return order;
   }
 
@@ -130,5 +144,31 @@ export class DatabaseStorage implements IStorage {
   async updateOrderStatus(id: number, status: Order['status']): Promise<Order | null> {
     const [order] = await db.update(orders).set({ status }).where(eq(orders.id, id)).returning();
     return order || null;
+  }
+
+  // Wishlist methods
+  async addToWishlist(userId: number, productId: number): Promise<boolean> {
+    const [existing] = await db.select().from(wishlist).where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)));
+    if (existing) return false;
+    await db.insert(wishlist).values({ userId, productId }).returning();
+    return true;
+  }
+
+  async removeFromWishlist(userId: number, productId: number): Promise<boolean> {
+    const result = await db.delete(wishlist).where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async getWishlistByUserId(userId: number): Promise<Product[]> {
+    const wishlistItems = await db.select().from(wishlist).where(eq(wishlist.userId, userId));
+    if (!wishlistItems.length) return [];
+    const productIds = wishlistItems.map(item => item.productId);
+    if (!productIds.length) return [];
+    return db.select().from(products).where(inArray(products.id, productIds));
+  }
+
+  async isProductInWishlist(userId: number, productId: number): Promise<boolean> {
+    const [existing] = await db.select().from(wishlist).where(and(eq(wishlist.userId, userId), eq(wishlist.productId, productId)));
+    return !!existing;
   }
 }

@@ -1,14 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Laptop, Shirt, Home, Gamepad2, Bot } from 'lucide-react';
+import { ArrowRight, Laptop, Shirt, Home, Gamepad2, Bot, ShoppingCart, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ProductCard from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Product } from '@/lib/wishlist';
+import { useCart } from '@/hooks/use-cart';
+import { useToast } from '@/hooks/use-toast';
+import { useWishlist } from '@/lib/wishlist';
+import React from 'react';
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+  const { isInWishlist, toggleWishlist } = useWishlist();
+  const navigate = useNavigate();
+  const [search, setSearch] = React.useState('');
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
@@ -40,14 +50,37 @@ export default function HomePage() {
 
   const featuredProducts = products.slice(0, 4);
   const categories = [
-    { name: 'Electronics', icon: Laptop, count: '1,234 products' },
-    { name: 'Fashion', icon: Shirt, count: '856 products' },
-    { name: 'Home & Garden', icon: Home, count: '642 products' },
-    { name: 'Sports', icon: Gamepad2, count: '423 products' },
+    { name: 'Electronics', icon: Laptop, count: '1,234 products', link: '/products?category=Electronics' },
+    { name: 'Clothing', icon: Shirt, count: '856 products', link: '/products?category=Clothing' },
+    { name: 'Home & Garden', icon: Home, count: '642 products', link: '/products?category=Home%20%26%20Garden' },
+    { name: 'Sports & Fitness', icon: Gamepad2, count: '423 products', link: '/products?category=Sports%20%26%20Fitness' },
+    { name: 'Wishlist', icon: Bot, count: '', link: '/wishlist' },
   ];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Search Bar */}
+      <section className="mb-8">
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            if (search.trim()) {
+              navigate(`/products?search=${encodeURIComponent(search.trim())}`);
+            }
+          }}
+          className="max-w-xl mx-auto flex items-center gap-2"
+        >
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+          <Button type="submit" variant="secondary">Search</Button>
+        </form>
+      </section>
+
       {/* Hero Section */}
       <section className="mb-12">
         <div className="relative rounded-2xl overflow-hidden h-96 gradient-hero flex items-center">
@@ -75,15 +108,17 @@ export default function HomePage() {
           {categories.map((category) => {
             const Icon = category.icon;
             return (
-              <Card key={category.name} className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-secondary mb-2">{category.name}</h3>
-                  <p className="text-sm text-gray-600">{category.count}</p>
-                </CardContent>
-              </Card>
+              <Link key={category.name} to={category.link || '#'} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                  <CardContent className="p-6">
+                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                      <Icon className="w-6 h-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-secondary mb-2">{category.name}</h3>
+                    <p className="text-sm text-gray-600">{category.count}</p>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
@@ -116,9 +151,9 @@ export default function HomePage() {
               </Card>
             ))
           ) : (
-            featuredProducts.map((product) => (
+            featuredProducts.map((product: Product) => (
               <ProductCard 
-                key={product.id} 
+                key={String(product.id)} 
                 product={product}
                 showBadge={product.stock <= 10}
                 badgeText={product.stock <= 10 ? 'Low Stock' : undefined}
@@ -146,17 +181,48 @@ export default function HomePage() {
             {recommendations.map((product: any) => (
               <Card key={product.id} className="border border-gray-200 hover:border-primary transition-colors cursor-pointer">
                 <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <img 
-                      src={product.imageUrl} 
-                      alt={product.name}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-medium text-secondary">{product.name}</h3>
-                      <p className="text-sm text-gray-600">{product.reason}</p>
-                      <span className="text-primary font-semibold">${parseFloat(product.price).toFixed(2)}</span>
+                  <Link to={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <div className="flex items-center space-x-3">
+                      <img 
+                        src={product.imageUrl} 
+                        alt={product.name}
+                        className="w-16 h-16 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-medium text-secondary">{product.name}</h3>
+                        <p className="text-sm text-gray-600">{product.reason}</p>
+                        <span className="text-primary font-semibold">{Number(product.price).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 })}</span>
+                      </div>
                     </div>
+                  </Link>
+                  <div className="flex gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        if (!user) {
+                          toast({
+                            title: 'Authentication Required',
+                            description: 'Please log in to add items to cart',
+                            variant: 'destructive',
+                          });
+                          return;
+                        }
+                        await addToCart(Number(product.id));
+                      }}
+                    >
+                      <span className="flex items-center"><ShoppingCart className="w-4 h-4 mr-1" />Add to Cart</span>
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        await toggleWishlist({ ...product, id: Number(product.id) });
+                      }}
+                    >
+                      <Heart className={`w-4 h-4 ${isInWishlist(Number(product.id)) ? 'fill-red-500 text-red-500' : ''}`} />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

@@ -45,23 +45,21 @@ function CheckoutForm() {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Conversion rate
+  const USD_TO_INR = 83;
+
   const subtotal = totalPrice;
-  const shipping = subtotal > 50 ? 0 : 9.99;
+  const shipping = subtotal > 4150 ? 0 : 830; // 50 USD = 4150 INR, 9.99 USD = 830 INR
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
   const createOrderMutation = useMutation({
     mutationFn: async (orderData: any) => {
-      const token = localStorage.getItem('token');
-      const response = await apiRequest('POST', '/api/orders', orderData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
+      const response = await apiRequest('POST', '/api/orders', orderData);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error || 'Failed to create order');
       }
-      
       return response.json();
     },
   });
@@ -220,7 +218,7 @@ function CheckoutForm() {
         size="lg"
         disabled={!stripe || isProcessing}
       >
-        {isProcessing ? 'Processing...' : `Place Order - $${total.toFixed(2)}`}
+        {isProcessing ? 'Processing...' : `Place Order - ${total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}`}
       </Button>
     </form>
   );
@@ -249,22 +247,35 @@ export default function CheckoutPage() {
       return; // Don't try to create payment intent without Stripe
     }
 
+    // Conversion rate
+    const USD_TO_INR = 83;
     const subtotal = totalPrice;
-    const shipping = subtotal > 50 ? 0 : 9.99;
+    const shipping = subtotal > 4150 ? 0 : 830;
     const tax = subtotal * 0.08;
     const total = subtotal + shipping + tax;
 
     // Create PaymentIntent
     const token = localStorage.getItem('token');
-    apiRequest('POST', '/api/create-payment-intent', { amount: total }, {
-      headers: { Authorization: `Bearer ${token}` }
+    // Ensure total is a number and not a string with commas
+    const cleanTotal = typeof total === 'string' ? Number(total.replace(/,/g, '')) : total;
+    console.log('[Checkout] Sending amount to backend:', cleanTotal, typeof cleanTotal);
+    apiRequest('POST', '/api/create-payment-intent', { amount: cleanTotal }, {
+      Authorization: `Bearer ${token}`
     })
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to create payment intent');
+        return response.json();
+      })
       .then(data => {
         setClientSecret(data.clientSecret);
       })
       .catch(error => {
         console.error('Error creating payment intent:', error);
+        toast({
+          title: 'Payment Error',
+          description: error.message || 'Failed to create payment intent',
+          variant: 'destructive',
+        });
       });
   }, [user, items, totalPrice, navigate]);
 
@@ -317,8 +328,11 @@ export default function CheckoutPage() {
     );
   }
 
+  // Conversion rate
+  const USD_TO_INR = 83;
+
   const subtotal = totalPrice;
-  const shipping = subtotal > 50 ? 0 : 9.99;
+  const shipping = subtotal > 4150 ? 0 : 830; // 50 USD = 4150 INR, 9.99 USD = 830 INR
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
@@ -353,29 +367,29 @@ export default function CheckoutPage() {
                       <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
                     </div>
                     <span className="font-medium text-sm">
-                      ${(item.product.price * item.quantity).toFixed(2)}
+                      {(item.product.price * item.quantity).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                     </span>
                   </div>
                 ))}
               </div>
 
               <div className="space-y-2 mb-6 pb-6 border-b border-gray-200">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{subtotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Shipping</span>
-                  <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                <div className="flex justify-between">
+                  <span>Shipping</span>
+                  <span>{shipping === 0 ? 'Free' : shipping.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                <div className="flex justify-between">
+                  <span>Tax</span>
+                  <span>{tax.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
                 <Separator />
-                <div className="flex justify-between text-lg font-semibold pt-2">
+                <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">${total.toFixed(2)}</span>
+                  <span className="text-primary">{total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
               </div>
 

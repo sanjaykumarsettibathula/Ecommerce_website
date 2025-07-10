@@ -9,9 +9,24 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import ProductCard from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+
+interface Product {
+  id: string | number;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category: string;
+  stock: number;
+  sku: string;
+}
 
 export default function ProductsPage() {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const urlSearch = searchParams.get('search') || '';
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState('featured');
@@ -50,7 +65,7 @@ export default function ProductsPage() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is handled by the query key dependency
+    setSearchParams(searchQuery ? { search: searchQuery } : {});
   };
 
   // Filter products based on price ranges
@@ -219,42 +234,15 @@ export default function ProductsPage() {
           </div>
 
           {/* Products Grid */}
-          <div className={`grid gap-6 ${
-            viewMode === 'grid' 
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-              : 'grid-cols-1'
-          }`}>
-            {isLoading ? (
-              Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}>
-                  <Skeleton className="w-full h-48 rounded-t-lg" />
-                  <CardContent className="p-4">
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-full mb-3" />
-                    <div className="flex items-center justify-between">
-                      <Skeleton className="h-6 w-20" />
-                      <Skeleton className="h-8 w-24" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : sortedProducts.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-gray-500 text-lg">No products found</p>
-                <p className="text-gray-400">Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              sortedProducts.map((product) => (
-                <ProductCard 
-                  key={product.id} 
-                  product={product}
-                  showBadge={product.stock <= 10}
-                  badgeText={product.stock <= 10 ? 'Low Stock' : undefined}
-                  badgeVariant="destructive"
-                />
-              ))
-            )}
-          </div>
+          {sortedProducts.length === 0 ? (
+            <div className="text-center text-gray-500 py-12">No products found.</div>
+          ) : (
+            <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'grid-cols-1 gap-4'}`}>
+              {sortedProducts.map((product: Product) => (
+                <ProductCard key={product.id} product={product} showBadge={product.stock <= 10} badgeText={product.stock <= 10 ? 'Low Stock' : undefined} badgeVariant="destructive" />
+              ))}
+            </div>
+          )}
 
           {/* Pagination */}
           {sortedProducts.length > 0 && (

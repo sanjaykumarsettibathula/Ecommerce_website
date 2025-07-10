@@ -18,7 +18,7 @@ interface CartItem {
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (productId: string, quantity?: number) => Promise<void>;
+  addToCart: (productId: string | number, quantity?: number) => Promise<void>;
   updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   removeFromCart: (itemId: string) => Promise<void>;
   clearCart: () => Promise<void>;
@@ -43,34 +43,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['cart'],
     queryFn: async () => {
       if (!user) return [];
-      
-      const response = await apiRequest('GET', '/api/cart', undefined, {
-        headers: getAuthHeaders()
-      });
-      
+      const response = await apiRequest('GET', '/api/cart', undefined);
       if (!response.ok) {
         throw new Error('Failed to fetch cart');
       }
-      
       return response.json();
     },
     enabled: !!user,
   });
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => {
-      const response = await apiRequest('POST', '/api/cart', {
-        productId,
-        quantity,
-      }, {
-        headers: getAuthHeaders()
-      });
-      
+    mutationFn: async ({ productId, quantity = 1 }: { productId: string | number; quantity?: number }) => {
+      const response = await apiRequest('POST', '/api/cart', { productId, quantity });
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to add to cart');
       }
-      
       return response.json();
     },
     onSuccess: () => {
@@ -91,17 +79,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const updateQuantityMutation = useMutation({
     mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
-      const response = await apiRequest('PUT', `/api/cart/${itemId}`, {
-        quantity,
-      }, {
-        headers: getAuthHeaders()
-      });
-      
+      const response = await apiRequest('PUT', `/api/cart/${itemId}`, { quantity });
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to update quantity');
       }
-      
       return response.json();
     },
     onSuccess: () => {
@@ -118,15 +100,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeFromCartMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      const response = await apiRequest('DELETE', `/api/cart/${itemId}`, undefined, {
-        headers: getAuthHeaders()
-      });
-      
+      const response = await apiRequest('DELETE', `/api/cart/${itemId}`);
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to remove from cart');
       }
-      
       return response.json();
     },
     onSuccess: () => {
@@ -147,15 +125,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const clearCartMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('DELETE', '/api/cart', undefined, {
-        headers: getAuthHeaders()
-      });
-      
+      const response = await apiRequest('DELETE', '/api/cart');
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to clear cart');
       }
-      
       return response.json();
     },
     onSuccess: () => {
@@ -177,7 +151,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const totalItems = items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum: number, item: CartItem) => sum + (item.product.price * item.quantity), 0);
 
-  const addToCart = async (productId: string, quantity = 1) => {
+  const addToCart = async (productId: string | number, quantity = 1) => {
     if (!user) {
       toast({
         title: 'Error',
@@ -187,7 +161,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    await addToCartMutation.mutateAsync({ productId, quantity });
+    await addToCartMutation.mutateAsync({ productId: Number(productId), quantity });
   };
 
   const updateQuantity = async (itemId: string, quantity: number) => {

@@ -57,7 +57,7 @@ export default function CartPage() {
   }
 
   const subtotal = totalPrice;
-  const shipping = subtotal > 50 ? 0 : 9.99;
+  const shipping = subtotal > 4150 ? 0 : 830;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
@@ -84,7 +84,7 @@ export default function CartPage() {
                         {item.product.name}
                       </h3>
                       <p className="text-sm text-gray-600 mb-2">
-                        ${parseFloat(item.product.price).toFixed(2)} each
+                        {Number(item.product.price).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} each
                       </p>
                       
                       <div className="flex items-center space-x-4">
@@ -122,7 +122,7 @@ export default function CartPage() {
                     
                     <div className="text-right">
                       <span className="text-lg font-bold text-primary">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        {(item.product.price * item.quantity).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}
                       </span>
                     </div>
                   </div>
@@ -158,20 +158,20 @@ export default function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{subtotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}</span>
+                  <span>{shipping === 0 ? 'Free' : shipping.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{tax.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">${total.toFixed(2)}</span>
+                  <span className="text-primary">{total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
               </div>
 

@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, Search, Heart, ShoppingCart, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,11 +12,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
+import { useWishlist } from '@/lib/wishlist';
+import React from 'react';
 
 export default function Navbar() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
+  const { wishlist } = useWishlist();
+  const navigate = useNavigate();
+  const [search, setSearch] = React.useState('');
 
   const navigation = [
     { name: 'Home', href: '/', icon: null },
@@ -46,6 +51,13 @@ export default function Navbar() {
                 type="text"
                 placeholder="Search products..."
                 className="w-full pl-10 pr-4"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && search.trim()) {
+                    navigate(`/products?search=${encodeURIComponent(search.trim())}`);
+                  }
+                }}
               />
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             </div>
@@ -53,12 +65,16 @@ export default function Navbar() {
 
           {/* Navigation Icons */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Heart className="w-5 h-5" />
-              <Badge variant="secondary" className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs">
-                3
-              </Badge>
-            </Button>
+            <Link to="/wishlist">
+              <Button variant="ghost" size="icon" className="relative">
+                <Heart className="w-5 h-5" />
+                {wishlist.length > 0 && (
+                  <Badge variant="secondary" className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs">
+                    {wishlist.length}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
             
             <Link to="/cart">
               <Button variant="ghost" size="icon" className="relative">
@@ -84,11 +100,11 @@ export default function Navbar() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    Profile
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile">Profile</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    Orders
+                  <DropdownMenuItem asChild>
+                    <Link to="/orders">Orders</Link>
                   </DropdownMenuItem>
                   {user.role === 'admin' && (
                     <DropdownMenuItem asChild>

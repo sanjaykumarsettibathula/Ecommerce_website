@@ -72,14 +72,27 @@ export type Order = typeof orders.$inferSelect;
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 
+export const wishlist = pgTable('wishlist', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').notNull().references(() => users.id),
+  productId: integer('product_id').notNull().references(() => products.id),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export type WishlistItem = typeof wishlist.$inferSelect;
+export const insertWishlistItemSchema = createInsertSchema(wishlist).omit({ id: true, createdAt: true });
+export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   cartItems: many(cartItems),
   orders: many(orders),
+  wishlist: many(wishlist),
 }));
 
 export const productsRelations = relations(products, ({ many }) => ({
   cartItems: many(cartItems),
+  wishlist: many(wishlist),
 }));
 
 export const cartItemsRelations = relations(cartItems, ({ one }) => ({
@@ -89,4 +102,9 @@ export const cartItemsRelations = relations(cartItems, ({ one }) => ({
 
 export const ordersRelations = relations(orders, ({ one }) => ({
   user: one(users, { fields: [orders.userId], references: [users.id] }),
+}));
+
+export const wishlistRelations = relations(wishlist, ({ one }) => ({
+  user: one(users, { fields: [wishlist.userId], references: [users.id] }),
+  product: one(products, { fields: [wishlist.productId], references: [products.id] }),
 }));

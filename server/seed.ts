@@ -124,6 +124,244 @@ export async function seedDatabase() {
         stock: 15,
         sku: 'SQ65-001',
         status: 'active' as const,
+      },
+      {
+        name: "Premium Wireless Headphones",
+        description: "High-quality sound with noise cancellation",
+        price: "15999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
+        stock: 45,
+        sku: "WH-001",
+        status: "active" as const
+      },
+      {
+        name: "Smart Fitness Watch",
+        description: "Track your health and fitness goals",
+        price: "24999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
+        stock: 12,
+        sku: "SW-002",
+        status: "active" as const
+      },
+      {
+        name: "Ultra-Thin Laptop",
+        description: "Powerful performance in a sleek design",
+        price: "89999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&h=300&fit=crop",
+        stock: 8,
+        sku: "LT-003",
+        status: "active" as const
+      },
+      {
+        name: "Professional Camera",
+        description: "Capture memories in stunning detail",
+        price: "74999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=400&h=300&fit=crop",
+        stock: 15,
+        sku: "CAM-004",
+        status: "active" as const
+      },
+      {
+        name: "Pro Tablet",
+        description: "Perfect for work and entertainment",
+        price: "44999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&h=300&fit=crop",
+        stock: 25,
+        sku: "TAB-005",
+        status: "active" as const
+      },
+      {
+        name: "Mechanical Keyboard",
+        description: "Premium typing experience",
+        price: "12999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400&h=300&fit=crop",
+        stock: 30,
+        sku: "KB-006",
+        status: "active" as const
+      },
+      {
+        name: "4K Monitor",
+        description: "Crystal clear display quality",
+        price: "32999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&h=300&fit=crop",
+        stock: 18,
+        sku: "MON-007",
+        status: "active" as const
+      },
+      {
+        name: "Wireless Earbuds",
+        description: "Compact and powerful audio",
+        price: "11999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=400&h=300&fit=crop",
+        stock: 50,
+        sku: "EB-008",
+        status: "active" as const
+      },
+      {
+        name: "Gaming Mouse",
+        description: "Precision for gaming and work",
+        price: "5999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=400&h=300&fit=crop",
+        stock: 40,
+        sku: "GM-009",
+        status: "active" as const
+      },
+      {
+        name: "Smartphone",
+        description: "Latest technology in your pocket",
+        price: "54999.00",
+        category: "Electronics",
+        imageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&h=300&fit=crop",
+        stock: 22,
+        sku: "SP-010",
+        status: "active" as const
+      },
+      
+      // Clothing Category
+      {
+        name: "Cotton T-Shirt",
+        description: "Soft and comfortable casual wear",
+        price: "899.00",
+        category: "Clothing",
+        imageUrl: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=300&fit=crop",
+        stock: 100,
+        sku: "TS-001",
+        status: "active" as const
+      },
+      {
+        name: "Denim Jeans",
+        description: "Classic blue denim jeans",
+        price: "2499.00",
+        category: "Clothing",
+        imageUrl: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=300&fit=crop",
+        stock: 75,
+        sku: "DJ-002",
+        status: "active" as const
+      },
+      {
+        name: "Formal Shirt",
+        description: "Professional office wear",
+        price: "1899.00",
+        category: "Clothing",
+        imageUrl: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400&h=300&fit=crop",
+        stock: 60,
+        sku: "FS-003",
+        status: "active" as const
+      },
+      {
+        name: "Winter Jacket",
+        description: "Warm and stylish winter wear",
+        price: "3999.00",
+        category: "Clothing",
+        imageUrl: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=300&fit=crop",
+        stock: 30,
+        sku: "WJ-004",
+        status: "active" as const
+      },
+      
+      // Books Category
+      {
+        name: "Programming Fundamentals",
+        description: "Learn the basics of programming",
+        price: "599.00",
+        category: "Books",
+        imageUrl: "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop",
+        stock: 50,
+        sku: "BK-001",
+        status: "active" as const
+      },
+      {
+        name: "Business Strategy",
+        description: "Master the art of business planning",
+        price: "799.00",
+        category: "Books",
+        imageUrl: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=300&fit=crop",
+        stock: 25,
+        sku: "BK-002",
+        status: "active" as const
+      },
+      {
+        name: "Fiction Novel",
+        description: "Engaging story for your leisure time",
+        price: "399.00",
+        category: "Books",
+        imageUrl: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&h=300&fit=crop",
+        stock: 80,
+        sku: "BK-003",
+        status: "active" as const
+      },
+      
+      // Home & Garden Category
+      {
+        name: "Coffee Maker",
+        description: "Start your day with perfect coffee",
+        price: "3999.00",
+        category: "Home & Garden",
+        imageUrl: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400&h=300&fit=crop",
+        stock: 20,
+        sku: "HG-001",
+        status: "active" as const
+      },
+      {
+        name: "Garden Plant Pot",
+        description: "Beautiful ceramic plant pot",
+        price: "899.00",
+        category: "Home & Garden",
+        imageUrl: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400&h=300&fit=crop",
+        stock: 40,
+        sku: "HG-002",
+        status: "active" as const
+      },
+      {
+        name: "LED Desk Lamp",
+        description: "Modern lighting for your workspace",
+        price: "1499.00",
+        category: "Home & Garden",
+        imageUrl: "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=400&h=300&fit=crop",
+        stock: 35,
+        sku: "HG-003",
+        status: "active" as const
+      },
+      
+      // Sports & Fitness Category
+      {
+        name: "Yoga Mat",
+        description: "Comfortable and durable yoga mat",
+        price: "1299.00",
+        category: "Sports & Fitness",
+        imageUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop",
+        stock: 60,
+        sku: "SF-001",
+        status: "active" as const
+      },
+      {
+        name: "Dumbbells Set",
+        description: "Complete home workout equipment",
+        price: "2999.00",
+        category: "Sports & Fitness",
+        imageUrl: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop",
+        stock: 25,
+        sku: "SF-002",
+        status: "active" as const
+      },
+      {
+        name: "Running Shoes",
+        description: "Comfortable shoes for your runs",
+        price: "3499.00",
+        category: "Sports & Fitness",
+        imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop",
+        stock: 45,
+        sku: "SF-003",
+        status: "active" as const
       }
     ];
 
