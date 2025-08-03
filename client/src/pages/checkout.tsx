@@ -51,7 +51,7 @@ function CheckoutForm() {
   const subtotal = totalPrice;
   const shipping = subtotal > 4150 ? 0 : 830; // 50 USD = 4150 INR, 9.99 USD = 830 INR
   const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const orderTotal = subtotal + shipping + tax;
 
   const createOrderMutation = useMutation({
     mutationFn: async (orderData: any) => {
@@ -97,7 +97,7 @@ function CheckoutForm() {
         subtotal,
         tax,
         shipping,
-        total,
+        total: orderTotal, // Use the renamed variable
         shippingAddress: formData,
       });
 
@@ -218,7 +218,7 @@ function CheckoutForm() {
         size="lg"
         disabled={!stripe || isProcessing}
       >
-        {isProcessing ? 'Processing...' : `Place Order - ${total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}`}
+        {isProcessing ? 'Processing...' : `Place Order - ${orderTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}`}
       </Button>
     </form>
   );
@@ -252,12 +252,12 @@ export default function CheckoutPage() {
     const subtotal = totalPrice;
     const shipping = subtotal > 4150 ? 0 : 830;
     const tax = subtotal * 0.08;
-    const total = subtotal + shipping + tax;
+    const orderTotal = subtotal + shipping + tax;
 
     // Create PaymentIntent
     const token = localStorage.getItem('token');
-    // Ensure total is a number and not a string with commas
-    const cleanTotal = typeof total === 'string' ? Number(total.replace(/,/g, '')) : total;
+    // Ensure total is a number
+    const cleanTotal = Number(orderTotal);
     console.log('[Checkout] Sending amount to backend:', cleanTotal, typeof cleanTotal);
     apiRequest('POST', '/api/create-payment-intent', { amount: cleanTotal }, {
       Authorization: `Bearer ${token}`
@@ -334,7 +334,7 @@ export default function CheckoutPage() {
   const subtotal = totalPrice;
   const shipping = subtotal > 4150 ? 0 : 830; // 50 USD = 4150 INR, 9.99 USD = 830 INR
   const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const orderTotal = subtotal + shipping + tax;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -389,7 +389,7 @@ export default function CheckoutPage() {
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">{total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                  <span className="text-primary">{orderTotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
               </div>
 

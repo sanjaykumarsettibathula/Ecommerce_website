@@ -7,17 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useWishlist } from '@/lib/wishlist';
 import { Link } from 'react-router-dom';
-
-interface Product {
-  id: string | number;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  category: string;
-  stock: number;
-  sku: string;
-}
+import { Product } from '@shared/schema';
 
 interface ProductCardProps {
   product: Product;
@@ -49,12 +39,17 @@ export default function ProductCard({
       return;
     }
 
-    await addToCart(Number(product.id));
+    await addToCart(product.id);
   };
 
   const handleToggleWishlist = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await toggleWishlist({ ...product, id: Number(product.id) });
+    // Convert database product to frontend format
+    const frontendProduct = {
+      ...product,
+      price: Number(product.price)
+    };
+    await toggleWishlist(frontendProduct);
   };
 
   return (
@@ -82,7 +77,7 @@ export default function ProductCard({
             className="absolute top-3 right-3 w-8 h-8 bg-white/80 backdrop-blur-sm hover:bg-white"
             onClick={handleToggleWishlist}
           >
-            <Heart className={`w-4 h-4 ${isInWishlist(Number(product.id)) ? 'fill-red-500 text-red-500' : ''}`} />
+            <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
           </Button>
         </div>
         

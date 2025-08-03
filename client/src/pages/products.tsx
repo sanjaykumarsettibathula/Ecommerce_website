@@ -10,17 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import ProductCard from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-
-interface Product {
-  id: string | number;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  category: string;
-  stock: number;
-  sku: string;
-}
+import { Product } from '@shared/schema';
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,7 +33,7 @@ export default function ProductsPage() {
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
-      return response.json();
+      return response.json() as Promise<Product[]>;
     },
   });
 
@@ -69,7 +59,7 @@ export default function ProductsPage() {
   };
 
   // Filter products based on price ranges
-  const filteredProducts = products.filter((product: any) => {
+  const filteredProducts = products.filter((product: Product) => {
     const price = Number(product.price);
     
     // Category filter

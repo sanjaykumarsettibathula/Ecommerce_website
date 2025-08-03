@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/use-cart';
 import { useWishlist } from '@/lib/wishlist';
 import { Heart, ShoppingCart } from 'lucide-react';
+import { FrontendProduct } from '@shared/schema';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -16,7 +17,7 @@ export default function ProductDetailsPage() {
     queryFn: async () => {
       const res = await fetch(`/api/products/${id}`);
       if (!res.ok) throw new Error('Product not found');
-      return res.json();
+      return res.json() as Promise<FrontendProduct>;
     },
     enabled: !!id,
   });
@@ -39,7 +40,7 @@ export default function ProductDetailsPage() {
               <p className="text-gray-600 mb-4">{product.description}</p>
               <div className="mb-4">
                 <span className="text-lg font-semibold text-primary">
-                  ₹{Number(product.price).toLocaleString('en-IN')}
+                  ₹{product.price.toLocaleString('en-IN')}
                 </span>
                 <span className="ml-4 text-sm text-gray-500">Stock: {product.stock}</span>
               </div>
@@ -53,7 +54,7 @@ export default function ProductDetailsPage() {
               </div>
             </div>
             <div className="flex gap-4 mt-6">
-              <Button onClick={() => addToCart(String(product.id))} disabled={product.stock === 0}>
+              <Button onClick={() => addToCart(product.id)} disabled={product.stock === 0}>
                 <ShoppingCart className="w-4 h-4 mr-1" /> Add to Cart
               </Button>
               <Button

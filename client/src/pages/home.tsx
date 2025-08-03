@@ -6,7 +6,7 @@ import ProductCard from '@/components/product-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
 import { Link, useNavigate } from 'react-router-dom';
-import { Product } from '@/lib/wishlist';
+import { Product } from '@shared/schema';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useWishlist } from '@/lib/wishlist';
@@ -27,7 +27,7 @@ export default function HomePage() {
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }
-      return response.json();
+      return response.json() as Promise<Product[]>;
     },
   });
 
@@ -43,7 +43,7 @@ export default function HomePage() {
       if (!response.ok) {
         throw new Error('Failed to fetch recommendations');
       }
-      return response.json();
+      return response.json() as Promise<Product[]>;
     },
     enabled: !!user,
   });
@@ -153,7 +153,7 @@ export default function HomePage() {
           ) : (
             featuredProducts.map((product: Product) => (
               <ProductCard 
-                key={String(product.id)} 
+                key={product.id} 
                 product={product}
                 showBadge={product.stock <= 10}
                 badgeText={product.stock <= 10 ? 'Low Stock' : undefined}
@@ -178,7 +178,7 @@ export default function HomePage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {recommendations.map((product: any) => (
+            {recommendations.map((product: Product) => (
               <Card key={product.id} className="border border-gray-200 hover:border-primary transition-colors cursor-pointer">
                 <CardContent className="p-4">
                   <Link to={`/products/${product.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -190,8 +190,8 @@ export default function HomePage() {
                       />
                       <div className="flex-1">
                         <h3 className="font-medium text-secondary">{product.name}</h3>
-                        <p className="text-sm text-gray-600">{product.reason}</p>
-                        <span className="text-primary font-semibold">{Number(product.price).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 })}</span>
+                        <p className="text-sm text-gray-600">Based on your recent purchases</p>
+                        <span className="text-primary font-semibold">₹{Number(product.price).toLocaleString('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 })}</span>
                       </div>
                     </div>
                   </Link>
@@ -208,7 +208,7 @@ export default function HomePage() {
                           });
                           return;
                         }
-                        await addToCart(Number(product.id));
+                        await addToCart(product.id);
                       }}
                     >
                       <span className="flex items-center"><ShoppingCart className="w-4 h-4 mr-1" />Add to Cart</span>
@@ -218,10 +218,15 @@ export default function HomePage() {
                       variant="outline"
                       onClick={async (e) => {
                         e.stopPropagation();
-                        await toggleWishlist({ ...product, id: Number(product.id) });
+                        // Convert database product to frontend format
+                        const frontendProduct = {
+                          ...product,
+                          price: Number(product.price)
+                        };
+                        await toggleWishlist(frontendProduct);
                       }}
                     >
-                      <Heart className={`w-4 h-4 ${isInWishlist(Number(product.id)) ? 'fill-red-500 text-red-500' : ''}`} />
+                      <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} />
                     </Button>
                   </div>
                 </CardContent>

@@ -94,11 +94,12 @@ export default function AuthPage() {
     }
   }, [toast]);
 
-  // Redirect if already logged in
-  if (user) {
-    navigate('/');
-    return null;
-  }
+  // Redirect if already logged in (fix: useEffect, not early return)
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),

@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
 import { storage } from "./storage";
-import { insertUserSchema, loginSchema, insertProductSchema, insertCartItemSchema, insertOrderSchema, type Product } from "@shared/schema";
+import { insertUserSchema, loginSchema, insertProductSchema, insertCartItemSchema, insertOrderSchema, type Product, FrontendUser } from "@shared/schema";
 import expressSession from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
@@ -53,6 +53,13 @@ const requireAdmin = (req: any, res: any, next: any) => {
   }
   next();
 };
+
+// Type for authenticated user
+interface AuthenticatedUser {
+  id: number;
+  email: string;
+  role: 'user' | 'admin';
+}
 
 // Session middleware (for OAuth)
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -223,7 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/auth/me", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUserById((req.user as any)?.id);
+      const user = await storage.getUserById((req.user as AuthenticatedUser)?.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -234,6 +241,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // User update endpoint
+  app.put("/api/users/:id", authenticateToken, async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      const authUser = (req.user as AuthenticatedUser);
+      
+      // Check if user is updating their own profile or is admin
+      if (authUser.id !== userId && authUser.role !== 'admin') {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      const updateData: Partial<FrontendUser> = {};
+      if (req.body.firstName) updateData.firstName = req.body.firstName;
+      if (req.body.lastName) updateData.lastName = req.body.lastName;
+      if (req.body.email) updateData.email = req.body.email;
+
+      const updatedUser = await storage.updateUser(userId, updateData);
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
       });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -320,7 +360,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cart routes
   app.get("/api/cart", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) return res.status(401).json({ error: 'User not authenticated' });
       const cartItems = await storage.getCartByUserId(userId);
       
@@ -343,7 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/cart", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) return res.status(401).json({ error: 'User not authenticated' });
       const cartItemData = insertCartItemSchema.parse({
         ...req.body,
@@ -383,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/cart", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) return res.status(401).json({ error: 'User not authenticated' });
       await storage.clearCart(userId);
       res.json({ message: "Cart cleared" });
@@ -395,8 +435,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Order routes
   app.get("/api/orders", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
-      const userRole = (req.user && typeof req.user.role === 'string') ? req.user.role : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
+      const userRole = (req.user as AuthenticatedUser)?.role;
       if (!userId || !userRole) return res.status(401).json({ error: 'User not authenticated' });
       let orders;
       if (userRole === 'admin') {
@@ -416,8 +456,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
-      const userRole = (req.user && typeof req.user.role === 'string') ? req.user.role : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
+      const userRole = (req.user as AuthenticatedUser)?.role;
       if (!userId || !userRole) return res.status(401).json({ error: 'User not authenticated' });
       // Check if user owns this order or is admin
       if (order.userId !== userId && userRole !== 'admin') {
@@ -431,7 +471,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/orders", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) return res.status(401).json({ error: 'User not authenticated' });
       const orderData = insertOrderSchema.parse({
         ...req.body,
@@ -483,7 +523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('[Stripe] Amount from frontend (INR):', amountInINR);
       console.log('[Stripe] Amount sent to Stripe (USD cents):', amountInCents);
 
-      const userId = (req.user && typeof req.user.id === 'number') ? req.user.id : null;
+      const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) {
         console.error("[Stripe] User not authenticated");
         return res.status(401).json({ error: 'User not authenticated' });
@@ -499,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ clientSecret: paymentIntent.client_secret });
     } catch (error) {
       console.error("[Stripe] Error creating payment intent:", error);
-      res.status(500).json({ error: "Error creating payment intent: " + error.message });
+      res.status(500).json({ error: "Error creating payment intent: " + (error as Error).message });
     }
   });
 
@@ -546,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Wishlist routes
   app.get("/api/wishlist", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as AuthenticatedUser)?.id;
       const products = await storage.getWishlistByUserId(userId);
       res.json(products);
     } catch (error: any) {
@@ -556,7 +596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/wishlist/:productId", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as AuthenticatedUser)?.id;
       const productId = Number(req.params.productId);
       const added = await storage.addToWishlist(userId, productId);
       res.json({ success: added });
@@ -567,7 +607,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/wishlist/:productId", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as AuthenticatedUser)?.id;
       const productId = Number(req.params.productId);
       const removed = await storage.removeFromWishlist(userId, productId);
       res.json({ success: removed });
@@ -578,7 +618,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/wishlist/:productId", authenticateToken, async (req, res) => {
     try {
-      const userId = (req.user as any)?.id;
+      const userId = (req.user as AuthenticatedUser)?.id;
       const productId = Number(req.params.productId);
       const exists = await storage.isProductInWishlist(userId, productId);
       res.json({ inWishlist: exists });

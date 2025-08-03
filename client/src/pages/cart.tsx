@@ -84,7 +84,7 @@ export default function CartPage() {
                         {item.product.name}
                       </h3>
                       <p className="text-sm text-gray-600 mb-2">
-                        {Number(item.product.price).toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} each
+                        ₹{item.product.price.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })} each
                       </p>
                       
                       <div className="flex items-center space-x-4">
@@ -158,20 +158,20 @@ export default function CartPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
-                  <span>{subtotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                  <span>₹{subtotal.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>{shipping === 0 ? 'Free' : shipping.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                  <span>{shipping === 0 ? 'Free' : `₹${shipping.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax</span>
-                  <span>{tax.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                  <span>₹{tax.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span className="text-primary">{total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
+                  <span className="text-primary">₹{total.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })}</span>
                 </div>
               </div>
 

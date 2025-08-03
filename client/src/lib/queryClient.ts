@@ -4,6 +4,14 @@ async function throwIfResNotOk(res: Response) {
   // Only throw for non-2xx responses
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
+    
+    // Handle authentication errors gracefully
+    if (res.status === 401 || res.status === 403) {
+      // Clear invalid token
+      localStorage.removeItem('token');
+      throw new Error(`Authentication failed: ${text}`);
+    }
+    
     throw new Error(`${res.status}: ${text}`);
   }
 }
@@ -44,7 +52,7 @@ export const getQueryFn: <T>(options: {
       headers: getAuthHeaders(),
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+    if (unauthorizedBehavior === "returnNull" && (res.status === 401 || res.status === 403)) {
       return null;
     }
 

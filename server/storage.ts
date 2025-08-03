@@ -313,7 +313,7 @@ class MemStorage implements IStorage {
   // User methods
   async createUser(userData: InsertUser): Promise<User> {
     const user: User = {
-      id: this.users.size + 1, // Use numeric ID to match database
+      id: this.users.size + 1,
       email: userData.email,
       password: userData.password,
       firstName: userData.firstName,
@@ -361,7 +361,7 @@ class MemStorage implements IStorage {
       id: this.products.size + 1,
       name: productData.name,
       description: productData.description,
-      price: String(productData.price),
+      price: productData.price,
       category: productData.category,
       imageUrl: productData.imageUrl,
       stock: productData.stock || 0,
@@ -370,31 +370,26 @@ class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.products.set(dbProduct.id.toString(), dbProduct as Product);
-    // Return as Product with price as number
-    return { ...dbProduct, price: Number(dbProduct.price) } as any;
+    return dbProduct as Product;
   }
 
   async getProductById(id: number): Promise<Product | null> {
     const product = this.products.get(id.toString());
     if (!product) return null;
-    return { ...product, price: Number(product.price) } as any;
+    return product;
   }
 
   async getAllProducts(): Promise<Product[]> {
-    return Array.from(this.products.values()).map(product => ({ ...product, price: Number(product.price) } as any));
+    return Array.from(this.products.values());
   }
 
   async updateProduct(id: number, productData: Partial<Product>): Promise<Product | null> {
     const product = this.products.get(id.toString());
     if (!product) return null;
-    // Update DB storage as string
-    const updatedDbProduct = { ...product, ...productData };
-    if (productData.price !== undefined) {
-      updatedDbProduct.price = String(productData.price);
-    }
-    this.products.set(id.toString(), updatedDbProduct as Product);
-    // Return as number
-    return { ...updatedDbProduct, price: Number(updatedDbProduct.price) } as any;
+    
+    const updatedProduct = { ...product, ...productData };
+    this.products.set(id.toString(), updatedProduct as Product);
+    return updatedProduct as Product;
   }
 
   async deleteProduct(id: number): Promise<boolean> {
@@ -409,15 +404,12 @@ class MemStorage implements IStorage {
         product.name.toLowerCase().includes(q) ||
         product.description.toLowerCase().includes(q) ||
         product.category.toLowerCase().includes(q)
-      )
-      .map(product => ({ ...product, price: Number(product.price) } as any));
+      );
   }
 
   async getProductsByCategory(category: string): Promise<Product[]> {
     const products = Array.from(this.products.values());
-    return products
-      .filter(product => product.category === category)
-      .map(product => ({ ...product, price: Number(product.price) } as any));
+    return products.filter(product => product.category === category);
   }
 
   // Cart methods
@@ -435,7 +427,7 @@ class MemStorage implements IStorage {
     }
 
     const cartItem: CartItem = {
-      id: this.cartItems.size + 1, // Use numeric ID to match database
+      id: this.cartItems.size + 1,
       ...cartItemData,
       createdAt: new Date(),
     };
@@ -475,7 +467,7 @@ class MemStorage implements IStorage {
   // Order methods
   async createOrder(orderData: InsertOrder): Promise<Order> {
     const order: Order = {
-      id: this.orders.size + 1, // Use numeric ID to match database
+      id: this.orders.size + 1,
       userId: orderData.userId,
       items: orderData.items,
       subtotal: orderData.subtotal,

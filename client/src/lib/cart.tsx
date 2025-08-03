@@ -3,24 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
-
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  product: {
-    id: string;
-    name: string;
-    price: number;
-    imageUrl: string;
-  };
-}
+import { FrontendCartItem, FrontendProduct } from '@shared/schema';
 
 interface CartContextType {
-  items: CartItem[];
-  addToCart: (productId: string | number, quantity?: number) => Promise<void>;
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
-  removeFromCart: (itemId: string) => Promise<void>;
+  items: FrontendCartItem[];
+  addToCart: (productId: number, quantity?: number) => Promise<void>;
+  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  removeFromCart: (itemId: number) => Promise<void>;
   clearCart: () => Promise<void>;
   totalItems: number;
   totalPrice: number;
@@ -34,31 +23,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
-
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['cart'],
     queryFn: async () => {
       if (!user) return [];
-      const response = await apiRequest('GET', '/api/cart', undefined);
-      if (!response.ok) {
-        throw new Error('Failed to fetch cart');
+      
+      try {
+        const response = await apiRequest('GET', '/api/cart', undefined);
+        return response.json();
+      } catch (error: any) {
+        if (error.message.includes('Authentication failed')) {
+          // Don't show error for auth failures, just return empty cart
+          return [];
+        }
+        throw error;
       }
-      return response.json();
     },
     enabled: !!user,
+    retry: false,
   });
 
   const addToCartMutation = useMutation({
-    mutationFn: async ({ productId, quantity = 1 }: { productId: string | number; quantity?: number }) => {
+    mutationFn: async ({ productId, quantity = 1 }: { productId: number; quantity?: number }) => {
       const response = await apiRequest('POST', '/api/cart', { productId, quantity });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to add to cart');
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -69,42 +56,50 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add to cart',
-        variant: 'destructive',
-      });
+      if (error.message.includes('Authentication failed')) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in to add items to cart',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to add to cart',
+          variant: 'destructive',
+        });
+      }
     },
   });
 
   const updateQuantityMutation = useMutation({
-    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+    mutationFn: async ({ itemId, quantity }: { itemId: number; quantity: number }) => {
       const response = await apiRequest('PUT', `/api/cart/${itemId}`, { quantity });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update quantity');
-      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to update quantity',
-        variant: 'destructive',
-      });
+      if (error.message.includes('Authentication failed')) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in again',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to update quantity',
+          variant: 'destructive',
+        });
+      }
     },
   });
 
   const removeFromCartMutation = useMutation({
-    mutationFn: async (itemId: string) => {
+    mutationFn: async (itemId: number) => {
       const response = await apiRequest('DELETE', `/api/cart/${itemId}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to remove from cart');
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -115,21 +110,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to remove from cart',
-        variant: 'destructive',
-      });
+      if (error.message.includes('Authentication failed')) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in again',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to remove from cart',
+          variant: 'destructive',
+        });
+      }
     },
   });
 
   const clearCartMutation = useMutation({
     mutationFn: async () => {
       const response = await apiRequest('DELETE', '/api/cart');
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to clear cart');
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -140,18 +139,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to clear cart',
-        variant: 'destructive',
-      });
+      if (error.message.includes('Authentication failed')) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please log in again',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: error.message || 'Failed to clear cart',
+          variant: 'destructive',
+        });
+      }
     },
   });
 
-  const totalItems = items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum: number, item: CartItem) => sum + (item.product.price * item.quantity), 0);
+  const totalItems = items.reduce((sum: number, item: FrontendCartItem) => sum + item.quantity, 0);
+  const totalPrice = items.reduce((sum: number, item: FrontendCartItem) => sum + (item.product.price * item.quantity), 0);
 
-  const addToCart = async (productId: string | number, quantity = 1) => {
+  const addToCart = async (productId: number, quantity = 1) => {
     if (!user) {
       toast({
         title: 'Error',
@@ -161,14 +168,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     
-    await addToCartMutation.mutateAsync({ productId: Number(productId), quantity });
+    await addToCartMutation.mutateAsync({ productId, quantity });
   };
 
-  const updateQuantity = async (itemId: string, quantity: number) => {
+  const updateQuantity = async (itemId: number, quantity: number) => {
     await updateQuantityMutation.mutateAsync({ itemId, quantity });
   };
 
-  const removeFromCart = async (itemId: string) => {
+  const removeFromCart = async (itemId: number) => {
     await removeFromCartMutation.mutateAsync(itemId);
   };
 

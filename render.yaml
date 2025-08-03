@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: ecommerce-pro
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ecommerce-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://ecommerce-pro.onrender.com
+
+databases:
+  - name: ecommerce-db
+    databaseName: ecommerce
+    user: ecommerce_user
+    plan: free 

@@ -83,6 +83,34 @@ export type WishlistItem = typeof wishlist.$inferSelect;
 export const insertWishlistItemSchema = createInsertSchema(wishlist).omit({ id: true, createdAt: true });
 export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;
 
+// Frontend type definitions for consistency
+export interface FrontendProduct {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl: string;
+  stock: number;
+  sku: string;
+  status: 'active' | 'inactive';
+}
+
+export interface FrontendCartItem {
+  id: number;
+  productId: number;
+  quantity: number;
+  product: FrontendProduct;
+}
+
+export interface FrontendUser {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'user' | 'admin';
+}
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   cartItems: many(cartItems),
