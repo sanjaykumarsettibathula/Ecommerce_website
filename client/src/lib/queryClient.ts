@@ -1,5 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// Get API URL from environment or default to localhost
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 async function throwIfResNotOk(res: Response) {
   // Only throw for non-2xx responses
   if (!res.ok) {
@@ -30,7 +33,10 @@ export async function apiRequest(
   data?: unknown | undefined,
   headers?: Record<string, string>
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Use absolute URL for production, relative for development
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+  
+  const res = await fetch(fullUrl, {
     method,
     headers: getAuthHeaders(data, headers),
     body: data ? JSON.stringify(data) : undefined,
@@ -47,7 +53,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const fullUrl = queryKey[0] as string;
+    const url = fullUrl.startsWith('http') ? fullUrl : `${API_BASE_URL}${fullUrl}`;
+    
+    const res = await fetch(url, {
       credentials: "include",
       headers: getAuthHeaders(),
     });

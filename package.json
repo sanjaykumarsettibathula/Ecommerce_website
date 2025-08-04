@@ -15,7 +15,11 @@
     "db:studio": "drizzle-kit studio",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "deploy:vercel": "vercel --prod",
+    "deploy:render": "render deploy",
+    "build:client": "cd client && npm run build",
+    "build:server": "esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
