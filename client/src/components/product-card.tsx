@@ -1,13 +1,13 @@
+import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useCart } from '@/hooks/use-cart';
 import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
 import { useWishlist } from '@/lib/wishlist';
-import { Link } from 'react-router-dom';
-import { Product } from '@shared/schema';
+import { useToast } from '@/hooks/use-toast';
+import { Product } from '@/types';
 
 interface ProductCardProps {
   product: Product;

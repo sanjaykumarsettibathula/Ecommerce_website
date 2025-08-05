@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/lib/auth';
+import React, { createContext, useContext } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from './queryClient';
+import { useAuth } from './auth';
 import { useToast } from '@/hooks/use-toast';
-import { FrontendCartItem, FrontendProduct } from '@shared/schema';
+import { FrontendCartItem } from '@/types';
 
 interface CartContextType {
   items: FrontendCartItem[];

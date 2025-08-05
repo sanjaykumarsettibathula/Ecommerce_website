@@ -55,7 +55,7 @@ A modern, full-stack e-commerce platform built with React, TypeScript, Express, 
 
 6. **Access the application:**
    - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
+   - Backend API: http://localhost:5001
 
 ## 📁 Project Structure
 
@@ -213,4 +213,4 @@ If you encounter any issues:
 
 ---
 
-Made with ❤️ by the EcommercePro team 
+Made with ❤️ by the EcommercePro team

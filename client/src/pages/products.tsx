@@ -1,20 +1,18 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Filter, Grid, List, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+import ProductCard from '@/components/product-card';
+import { Grid, List, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
-import ProductCard from '@/components/product-card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Product } from '@shared/schema';
+import { Product } from '@/types';
 
 export default function ProductsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const urlSearch = searchParams.get('search') || '';
   const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [selectedCategory, setSelectedCategory] = useState('');

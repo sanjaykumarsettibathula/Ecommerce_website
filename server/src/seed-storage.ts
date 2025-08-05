@@ -1,5 +1,5 @@
 import { db } from './db';
-import { products as productsTable } from '../shared/schema';
+import { products as productsTable } from './types/schema';
 import { initialProducts } from './storage';
 import { eq } from 'drizzle-orm';
 

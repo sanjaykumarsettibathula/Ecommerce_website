@@ -1,12 +1,12 @@
+import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, Laptop, Shirt, Home, Gamepad2, Bot, ShoppingCart, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ProductCard from '@/components/product-card';
+import { Product } from '@/types';
+import { ArrowRight, Laptop, Shirt, Home, Gamepad2, Bot, ShoppingCart, Heart } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/use-auth';
-import { Link, useNavigate } from 'react-router-dom';
-import { Product } from '@shared/schema';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useWishlist } from '@/lib/wishlist';
@@ -23,6 +23,7 @@ export default function HomePage() {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
+      // Use the proxy configuration
       const response = await fetch('/api/products');
       if (!response.ok) {
         throw new Error('Failed to fetch products');

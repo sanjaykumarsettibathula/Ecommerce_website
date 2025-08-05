@@ -1,4 +1,4 @@
-import { users, products, cartItems, orders, type User, type InsertUser, type Product, type InsertProduct, type CartItem, type InsertCartItem, type Order, type InsertOrder } from "@shared/schema";
+import { users, products, cartItems, orders, type User, type InsertUser, type Product, type InsertProduct, type CartItem, type InsertCartItem, type Order, type InsertOrder } from "./types/schema";
 import 'dotenv/config';
 
 export interface IStorage {
@@ -530,6 +530,5 @@ class MemStorage implements IStorage {
   }
 }
 
-import { DatabaseStorage } from "./database-storage";
-
-export const storage = new DatabaseStorage();
+// The storage instance will be created in index.ts and passed to routes.ts
+// This file only exports the interface and initial products

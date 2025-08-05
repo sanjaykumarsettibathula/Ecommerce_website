@@ -4,7 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff } from 'lucide-react';
-import { FaGoogle, FaFacebook } from 'react-icons/fa';
+import { FaGoogle } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -65,7 +65,8 @@ export default function AuthPage() {
       localStorage.setItem('token', token);
       // Fetch user data and update auth state
       fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: 'include'
       })
         .then(response => {
           if (!response.ok) {
@@ -145,13 +146,6 @@ export default function AuthPage() {
       // Error handling is done in the auth context
       console.error('Register error:', error);
     }
-  };
-
-  const handleSocialLogin = (provider: string) => {
-    toast({
-      title: 'Coming Soon',
-      description: `${provider} login will be available soon!`,
-    });
   };
 
   return (
@@ -270,7 +264,7 @@ export default function AuthPage() {
                   type="button"
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2"
-                  onClick={() => window.location.href = '/api/auth/google'}
+                  onClick={() => window.location.href = `/api/auth/google`}
                 >
                   <FaGoogle className="w-5 h-5" />
                   Continue with Google

@@ -3,13 +3,17 @@ import { createServer, type Server } from "http";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
-import { storage } from "./storage";
-import { insertUserSchema, loginSchema, insertProductSchema, insertCartItemSchema, insertOrderSchema, type Product, FrontendUser } from "@shared/schema";
+import type { IStorage } from "./storage";
+import { insertUserSchema, loginSchema, insertProductSchema, insertCartItemSchema, insertOrderSchema, type Product, FrontendUser } from "./types/schema";
 import expressSession from 'express-session';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+// Ensure JWT_SECRET is set
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
+const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!process.env.STRIPE_SECRET_KEY) {
   console.warn('Missing STRIPE_SECRET_KEY environment variable. Stripe payments will not work.');
@@ -62,7 +66,9 @@ interface AuthenticatedUser {
 }
 
 // Session middleware (for OAuth)
-export async function registerRoutes(app: Express): Promise<Server> {
+export async function registerRoutes(app: Express, storageInstance: IStorage): Promise<Server> {
+  // Use the passed storage instance
+  const storage = storageInstance;
   app.use(expressSession({
     secret: process.env.SESSION_SECRET || 'dev-secret',
     resave: false,

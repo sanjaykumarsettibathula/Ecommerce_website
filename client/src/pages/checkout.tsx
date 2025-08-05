@@ -45,9 +45,6 @@ function CheckoutForm() {
 
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Conversion rate
-  const USD_TO_INR = 83;
-
   const subtotal = totalPrice;
   const shipping = subtotal > 4150 ? 0 : 830; // 50 USD = 4150 INR, 9.99 USD = 830 INR
   const tax = subtotal * 0.08;
@@ -248,7 +245,6 @@ export default function CheckoutPage() {
     }
 
     // Conversion rate
-    const USD_TO_INR = 83;
     const subtotal = totalPrice;
     const shipping = subtotal > 4150 ? 0 : 830;
     const tax = subtotal * 0.08;
@@ -329,8 +325,6 @@ export default function CheckoutPage() {
   }
 
   // Conversion rate
-  const USD_TO_INR = 83;
-
   const subtotal = totalPrice;
   const shipping = subtotal > 4150 ? 0 : 830; // 50 USD = 4150 INR, 9.99 USD = 830 INR
   const tax = subtotal * 0.08;

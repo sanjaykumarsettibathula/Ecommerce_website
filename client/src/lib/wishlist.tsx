@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from './auth';
 import { useToast } from '@/hooks/use-toast';
-import { FrontendProduct } from '@shared/schema';
+import { apiRequest } from './queryClient';
+import { FrontendProduct } from '@/types';
 
 interface WishlistContextType {
   wishlist: FrontendProduct[];
@@ -32,9 +33,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
-      const res = await fetch('/api/wishlist', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiRequest('GET', '/api/wishlist');
       
       if (res.status === 401 || res.status === 403) {
         // Token expired or invalid
@@ -86,10 +85,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     
     try {
       if (isInWishlist(product.id)) {
-        const res = await fetch(`/api/wishlist/${product.id}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiRequest('DELETE', `/api/wishlist/${product.id}`);
         
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem('token');
@@ -102,14 +98,14 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (!res.ok) throw new Error('Failed to remove from wishlist');
-        setWishlist((prev) => prev.filter((item) => item.id !== product.id));
-        toast({ title: 'Removed from Wishlist', description: product.name });
+        setWishlist(prev => prev.filter(item => item.id !== product.id));
+        toast({
+          title: 'Success',
+          description: 'Removed from wishlist',
+        });
         console.log('Removed from wishlist:', product.id);
       } else {
-        const res = await fetch(`/api/wishlist/${product.id}`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiRequest('POST', `/api/wishlist/${product.id}`);
         
         if (res.status === 401 || res.status === 403) {
           localStorage.removeItem('token');
@@ -122,8 +118,11 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         }
         
         if (!res.ok) throw new Error('Failed to add to wishlist');
-        setWishlist((prev) => [...prev, product]);
-        toast({ title: 'Added to Wishlist', description: product.name });
+        setWishlist(prev => [...prev, product]);
+        toast({
+          title: 'Success',
+          description: 'Added to wishlist',
+        });
         console.log('Added to wishlist:', product.id);
       }
       await fetchWishlist();

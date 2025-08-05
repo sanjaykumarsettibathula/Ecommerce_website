@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, products } from "@shared/schema";
+import { users, products } from "./types/schema";
 import bcrypt from "bcrypt";
 
 export async function seedDatabase() {

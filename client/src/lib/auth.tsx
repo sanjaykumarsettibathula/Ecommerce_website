@@ -34,9 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const token = localStorage.getItem('token');
     if (token) {
       // Validate token and get user info
-      fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      apiRequest('GET', '/api/auth/me')
         .then(response => response.json())
         .then(userData => {
           setUser(userData);

@@ -16,7 +16,7 @@
 4. Set the following:
    - **Name**: Your app name (e.g., "EcommercePro")
    - **Authorized JavaScript origins**: `http://localhost:3000`
-   - **Authorized redirect URIs**: `http://localhost:5000/api/auth/google/callback`
+   - **Authorized redirect URIs**: `http://localhost:5001/api/auth/google/callback`
 
 ## Step 3: Get Your Credentials
 1. After creating the OAuth client, you'll get:
@@ -57,7 +57,7 @@ npm run dev
    - Restart the application after adding the environment variables
 
 2. **"Google authentication failed" error**
-   - Check that your redirect URI matches exactly: `http://localhost:5000/api/auth/google/callback`
+   - Check that your redirect URI matches exactly: `http://localhost:5001/api/auth/google/callback`
    - Ensure your Google Cloud project has the Google+ API enabled
 
 3. **"No user found" error**
@@ -66,7 +66,7 @@ npm run dev
 
 4. **Redirect loop or 404 errors**
    - Make sure your frontend is running on `http://localhost:3000`
-   - Ensure your backend is running on `http://localhost:5000`
+   - Ensure your backend is running on `http://localhost:5001`
 
 ### Testing the Setup:
 1. Start your application
@@ -78,4 +78,4 @@ npm run dev
 ## Security Notes:
 - Never commit your `.env` file to version control
 - Use different OAuth credentials for development and production
-- Regularly rotate your JWT and session secrets 
+- Regularly rotate your JWT and session secrets
