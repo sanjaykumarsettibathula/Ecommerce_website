@@ -7,37 +7,46 @@ import { MemoryStorage } from "./memory-storage";
 import { DatabaseStorage } from "./database-storage";
 import type { IStorage } from "./storage";
 
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS middleware - more secure configuration
+// CORS middleware - simplified for development
 app.use((req: Request, res: Response, next: NextFunction) => {
+  // Log all requests for debugging
+  console.log(`${req.method} ${req.url} - Origin: ${req.headers.origin}`);
+  
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
   const origin = req.headers.origin;
   
   if (origin && allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
+  } else {
+    res.header("Access-Control-Allow-Origin", "http://localhost:5176");
   }
   
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
-  
+
+  // Handle preflight requests
   if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-  } else {
-    next();
+    console.log('Responding to OPTIONS request');
+    return res.status(200).end();
   }
+  
+  next();
 });
 
 (async () => {
   // Validate required environment variables
   const requiredEnvVars = [
+    'DATABASE_URL',
     'JWT_SECRET',
     'SESSION_SECRET'
   ];
-  
+
   // Only require DATABASE_URL in production
   if (process.env.NODE_ENV === 'production') {
     requiredEnvVars.push('DATABASE_URL');

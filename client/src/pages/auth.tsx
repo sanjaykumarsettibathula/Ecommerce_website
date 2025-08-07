@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -64,10 +65,7 @@ export default function AuthPage() {
     if (token) {
       localStorage.setItem('token', token);
       // Fetch user data and update auth state
-      fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
-        credentials: 'include'
-      })
+      apiRequest('GET', '/api/auth/me')
         .then(response => {
           if (!response.ok) {
             throw new Error('Failed to validate token');

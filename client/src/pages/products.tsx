@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,7 +28,7 @@ export default function ProductsPage() {
       if (searchQuery) params.append('search', searchQuery);
       if (selectedCategory) params.append('category', selectedCategory);
       
-      const response = await fetch(`/api/products?${params}`);
+      const response = await apiRequest('GET', `/api/products?${params}`);
       if (!response.ok) {
         throw new Error('Failed to fetch products');
       }

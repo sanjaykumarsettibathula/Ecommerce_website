@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth();
@@ -17,15 +18,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ firstName, lastName }),
-      });
+      const res = await apiRequest('PUT', `/api/users/${user.id}`, { firstName, lastName });
       if (!res.ok) throw new Error('Failed to update profile');
       toast({ title: 'Profile updated', description: 'Your profile was updated successfully.' });
     } catch (e: any) {
@@ -59,4 +52,4 @@ export default function ProfilePage() {
       </Button>
     </div>
   );
-} 
+}

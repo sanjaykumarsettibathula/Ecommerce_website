@@ -64,13 +64,8 @@ function ProductForm({ product, onSuccess }: { product?: Product; onSuccess: () 
     mutationFn: async (data: ProductFormData) => {
       const url = product ? `/api/products/${product.id}` : '/api/products';
       const method = product ? 'PUT' : 'POST';
-      const headers = { ...getHeaders(), 'Content-Type': 'application/json' };
       const payload = { ...data, price: String(data.price) };
-      const response = await fetch(url, {
-        method,
-        headers,
-        body: JSON.stringify(payload),
-      });
+      const response = await apiRequest(method, url, payload);
       
       if (!response.ok) {
         const error = await response.json();
@@ -244,9 +239,7 @@ export default function AdminPage() {
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const response = await fetch('/api/admin/stats', {
-        headers: getHeaders()
-      });
+      const response = await apiRequest('GET', '/api/admin/stats');
       return response.json();
     },
     enabled: user?.role === 'admin',
@@ -266,9 +259,7 @@ export default function AdminPage() {
   const { data: orders = [] } = useQuery({
     queryKey: ['orders'],
     queryFn: async () => {
-      const response = await fetch('/api/orders', {
-        headers: getHeaders()
-      });
+      const response = await apiRequest('GET', '/api/orders');
       return response.json();
     },
     enabled: user?.role === 'admin',
@@ -276,10 +267,7 @@ export default function AdminPage() {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
-      const response = await fetch(`/api/products/${productId}`, {
-        method: 'DELETE',
-        headers: getHeaders()
-      });
+      const response = await apiRequest('DELETE', `/api/products/${productId}`);
       
       if (!response.ok) {
         const error = await response.json();

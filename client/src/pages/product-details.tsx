@@ -6,6 +6,7 @@ import { Heart, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useWishlist } from '@/lib/wishlist';
 import { FrontendProduct } from '@/types';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function ProductDetailsPage() {
   const { id } = useParams();
@@ -15,7 +16,7 @@ export default function ProductDetailsPage() {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', id],
     queryFn: async () => {
-      const res = await fetch(`/api/products/${id}`);
+      const res = await apiRequest('GET', `/api/products/${id}`);
       if (!res.ok) throw new Error('Product not found');
       return res.json() as Promise<FrontendProduct>;
     },
@@ -74,4 +75,4 @@ export default function ProductDetailsPage() {
       </Card>
     </div>
   );
-} 
+}

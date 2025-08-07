@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
+
 import type { IStorage } from "./storage";
+import { storage } from "./storage";
 import { insertUserSchema, loginSchema, insertProductSchema, insertCartItemSchema, insertOrderSchema, type Product, FrontendUser } from "./types/schema";
 import expressSession from 'express-session';
 import passport from 'passport';
@@ -66,9 +68,9 @@ interface AuthenticatedUser {
 }
 
 // Session middleware (for OAuth)
-export async function registerRoutes(app: Express, storageInstance: IStorage): Promise<Server> {
-  // Use the passed storage instance
-  const storage = storageInstance;
+export async function registerRoutes(app: Express, storageInstance?: IStorage): Promise<Server> {
+  // Use the passed storage instance or the global one
+  const storageToUse = storageInstance || storage;
   app.use(expressSession({
     secret: process.env.SESSION_SECRET || 'dev-secret',
     resave: false,
@@ -100,10 +102,10 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       const email = profile.emails[0].value;
       console.log('Looking up user by email:', email);
       
-      let user = await storage.getUserByEmail(email);
+      let user = await storageToUse.getUserByEmail(email);
       if (!user) {
         console.log('Creating new user for Google OAuth');
-        user = await storage.createUser({
+        user = await storageToUse.createUser({
           email: email,
           password: '', // No password for social login
           firstName: profile.name?.givenName || '',
@@ -126,7 +128,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
     done(null, user.id);
   });
   passport.deserializeUser(async (id: number, done) => {
-    const user = await storage.getUserById(id);
+    const user = await storageToUse.getUserById(id);
     done(null, user);
   });
 
@@ -164,7 +166,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       const userData = insertUserSchema.parse(req.body);
       
       // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+      const existingUser = await storageToUse.getUserByEmail(userData.email);
       if (existingUser) {
         return res.status(400).json({ error: "Email already registered" });
       }
@@ -172,7 +174,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       // Hash password
       const hashedPassword = await bcrypt.hash(userData.password, 10);
       
-      const user = await storage.createUser({
+      const user = await storageToUse.createUser({
         ...userData,
         password: hashedPassword,
       });
@@ -203,7 +205,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
     try {
       const { email, password } = loginSchema.parse(req.body);
       
-      const user = await storage.getUserByEmail(email);
+      const user = await storageToUse.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ error: "Invalid credentials" });
       }
@@ -236,7 +238,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
 
   app.get("/api/auth/me", authenticateToken, async (req, res) => {
     try {
-      const user = await storage.getUserById((req.user as AuthenticatedUser)?.id);
+      const user = await storageToUse.getUserById((req.user as AuthenticatedUser)?.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -269,7 +271,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       if (req.body.lastName) updateData.lastName = req.body.lastName;
       if (req.body.email) updateData.email = req.body.email;
 
-      const updatedUser = await storage.updateUser(userId, updateData);
+      const updatedUser = await storageToUse.updateUser(userId, updateData);
       if (!updatedUser) {
         return res.status(404).json({ error: "User not found" });
       }
@@ -293,11 +295,11 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       
       let products;
       if (search) {
-        products = await storage.searchProducts(search as string);
+        products = await storageToUse.searchProducts(search as string);
       } else if (category) {
-        products = await storage.getProductsByCategory(category as string);
+        products = await storageToUse.getProductsByCategory(category as string);
       } else {
-        products = await storage.getAllProducts();
+        products = await storageToUse.getAllProducts();
       }
 
       res.json(products);
@@ -308,7 +310,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
 
   app.get("/api/products/:id", async (req, res) => {
     try {
-      const product = await storage.getProductById(Number(req.params.id));
+      const product = await storageToUse.getProductById(Number(req.params.id));
       if (!product) {
         return res.status(404).json({ error: "Product not found" });
       }
@@ -321,7 +323,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   app.post("/api/products", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const productData = insertProductSchema.parse(req.body);
-      const product = await storage.createProduct(productData);
+      const product = await storageToUse.createProduct(productData);
       res.json(product);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -341,7 +343,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       if (typeof productData.stock === 'number') updateData.stock = productData.stock;
       if (typeof productData.sku === 'string') updateData.sku = productData.sku;
       if (productData.status === 'active' || productData.status === 'inactive') updateData.status = productData.status;
-      const product = await storage.updateProduct(Number(req.params.id), updateData);
+      const product = await storageToUse.updateProduct(Number(req.params.id), updateData);
       if (!product) {
         return res.status(404).json({ error: "Product not found" });
       }
@@ -353,7 +355,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
 
   app.delete("/api/products/:id", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      const deleted = await storage.deleteProduct(Number(req.params.id));
+      const deleted = await storageToUse.deleteProduct(Number(req.params.id));
       if (!deleted) {
         return res.status(404).json({ error: "Product not found" });
       }
@@ -368,12 +370,12 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
     try {
       const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) return res.status(401).json({ error: 'User not authenticated' });
-      const cartItems = await storage.getCartByUserId(userId);
+      const cartItems = await storageToUse.getCartByUserId(userId);
       
       // Get product details for each cart item
       const cartWithProducts = await Promise.all(
         cartItems.map(async (item) => {
-          const product = await storage.getProductById(item.productId);
+          const product = await storageToUse.getProductById(item.productId);
           return {
             ...item,
             product,
@@ -395,7 +397,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
         ...req.body,
         userId,
       });
-      const cartItem = await storage.addToCart(cartItemData);
+      const cartItem = await storageToUse.addToCart(cartItemData);
       res.json(cartItem);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -405,7 +407,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   app.put("/api/cart/:id", authenticateToken, async (req, res) => {
     try {
       const { quantity } = req.body;
-      const cartItem = await storage.updateCartItem(Number(req.params.id), quantity);
+      const cartItem = await storageToUse.updateCartItem(Number(req.params.id), quantity);
       if (!cartItem) {
         return res.status(404).json({ error: "Cart item not found" });
       }
@@ -417,7 +419,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
 
   app.delete("/api/cart/:id", authenticateToken, async (req, res) => {
     try {
-      const deleted = await storage.removeFromCart(Number(req.params.id));
+      const deleted = await storageToUse.removeFromCart(Number(req.params.id));
       if (!deleted) {
         return res.status(404).json({ error: "Cart item not found" });
       }
@@ -431,7 +433,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
     try {
       const userId = (req.user as AuthenticatedUser)?.id;
       if (!userId) return res.status(401).json({ error: 'User not authenticated' });
-      await storage.clearCart(userId);
+      await storageToUse.clearCart(userId);
       res.json({ message: "Cart cleared" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
@@ -446,9 +448,9 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       if (!userId || !userRole) return res.status(401).json({ error: 'User not authenticated' });
       let orders;
       if (userRole === 'admin') {
-        orders = await storage.getAllOrders();
+        orders = await storageToUse.getAllOrders();
       } else {
-        orders = await storage.getOrdersByUserId(userId);
+        orders = await storageToUse.getOrdersByUserId(userId);
       }
       res.json(orders);
     } catch (error: any) {
@@ -458,7 +460,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
 
   app.get("/api/orders/:id", authenticateToken, async (req, res) => {
     try {
-      const order = await storage.getOrderById(Number(req.params.id));
+      const order = await storageToUse.getOrderById(Number(req.params.id));
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -483,9 +485,9 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
         ...req.body,
         userId,
       });
-      const order = await storage.createOrder(orderData);
+      const order = await storageToUse.createOrder(orderData);
       // Clear cart after order is created
-      await storage.clearCart(userId);
+      await storageToUse.clearCart(userId);
       res.json(order);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
@@ -495,7 +497,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   app.put("/api/orders/:id/status", authenticateToken, requireAdmin, async (req, res) => {
     try {
       const { status } = req.body;
-      const order = await storage.updateOrderStatus(Number(req.params.id), status);
+      const order = await storageToUse.updateOrderStatus(Number(req.params.id), status);
       if (!order) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -552,9 +554,9 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   // Admin stats
   app.get("/api/admin/stats", authenticateToken, requireAdmin, async (req, res) => {
     try {
-      const products = await storage.getAllProducts();
-      const orders = await storage.getAllOrders();
-      const users = await storage.getAllUsers();
+      const products = await storageToUse.getAllProducts();
+      const orders = await storageToUse.getAllOrders();
+      const users = await storageToUse.getAllUsers();
       const totalSales = orders.reduce((sum, order) => sum + Number(order.total), 0);
       const totalProducts = products.length;
       const totalOrders = orders.length;
@@ -574,7 +576,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   app.get("/api/recommendations", authenticateToken, async (req, res) => {
     try {
       // For now, return some random products as recommendations
-      const allProducts = await storage.getAllProducts();
+      const allProducts = await storageToUse.getAllProducts();
       const recommendations = allProducts
         .sort(() => Math.random() - 0.5)
         .slice(0, 3)
@@ -593,7 +595,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   app.get("/api/wishlist", authenticateToken, async (req, res) => {
     try {
       const userId = (req.user as AuthenticatedUser)?.id;
-      const products = await storage.getWishlistByUserId(userId);
+      const products = await storageToUse.getWishlistByUserId(userId);
       res.json(products);
     } catch (error: any) {
       res.status(500).json({ error: error.message });

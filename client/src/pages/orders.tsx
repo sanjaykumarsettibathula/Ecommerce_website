@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent } from '@/components/ui/card';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function OrdersPage() {
   const { user, isLoading } = useAuth();
@@ -10,10 +11,7 @@ export default function OrdersPage() {
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    const token = localStorage.getItem('token');
-    fetch('/api/orders', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiRequest('GET', '/api/orders')
       .then(res => res.json())
       .then(data => setOrders(data))
       .catch(() => setOrders([]))
@@ -55,4 +53,4 @@ export default function OrdersPage() {
       </div>
     </div>
   );
-} 
+}

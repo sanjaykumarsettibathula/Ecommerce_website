@@ -36,15 +36,28 @@ export async function apiRequest(
   // Use proxy configuration for API requests
   const fullUrl = url.startsWith('http') ? url : url;
   
-  const res = await fetch(fullUrl, {
-    method,
-    headers: getAuthHeaders(data, headers),
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
+  console.log(`Making ${method} request to ${fullUrl}`);
+  
+  try {
+    const res = await fetch(fullUrl, {
+      method,
+      headers: getAuthHeaders(data, headers),
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+      mode: 'cors'
+    });
+    
+    console.log(`Response status: ${res.status}`);
+    if (!res.ok) {
+      console.error(`Error response: ${res.statusText}`);
+    }
+    
+    await throwIfResNotOk(res);
+    return res;
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
+  }
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
@@ -56,17 +69,32 @@ export const getQueryFn: <T>(options: {
     const fullUrl = queryKey[0] as string;
     const url = fullUrl.startsWith('http') ? fullUrl : `${API_BASE_URL}${fullUrl}`;
     
-    const res = await fetch(url, {
-      credentials: "include",
-      headers: getAuthHeaders(),
-    });
+    console.log(`Query function making request to ${url}`);
+    
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        credentials: "include",
+        headers: getAuthHeaders(),
+        mode: 'cors'
+      });
+      
+      console.log(`Query function response status: ${res.status}`);
+      
+      if (unauthorizedBehavior === "returnNull" && (res.status === 401 || res.status === 403)) {
+        return null;
+      }
+      
+      if (!res.ok) {
+        console.error(`Query function error response: ${res.statusText}`);
+      }
 
-    if (unauthorizedBehavior === "returnNull" && (res.status === 401 || res.status === 403)) {
-      return null;
+      await throwIfResNotOk(res);
+      return await res.json();
+    } catch (error) {
+      console.error('Query function fetch error:', error);
+      throw error;
     }
-
-    await throwIfResNotOk(res);
-    return await res.json();
   };
 
 export const queryClient = new QueryClient({

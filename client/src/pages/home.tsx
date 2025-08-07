@@ -10,6 +10,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useWishlist } from '@/lib/wishlist';
+import { apiRequest } from '@/lib/queryClient';
 import React from 'react';
 
 export default function HomePage() {
@@ -23,11 +24,7 @@ export default function HomePage() {
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      // Use the proxy configuration
-      const response = await fetch('/api/products');
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
+      const response = await apiRequest('GET', '/api/products');
       return response.json() as Promise<Product[]>;
     },
   });
@@ -38,12 +35,7 @@ export default function HomePage() {
       const token = localStorage.getItem('token');
       if (!token) return [];
       
-      const response = await fetch('/api/recommendations', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch recommendations');
-      }
+      const response = await apiRequest('GET', '/api/recommendations');
       return response.json() as Promise<Product[]>;
     },
     enabled: !!user,
