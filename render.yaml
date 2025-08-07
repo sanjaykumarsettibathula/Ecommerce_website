@@ -3,7 +3,7 @@ services:
   - type: web
     name: ecommerce-pro-backend
     env: node
-    buildCommand: npm install && npm run build:render
+    buildCommand: npm install && npm run build:server-only
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
