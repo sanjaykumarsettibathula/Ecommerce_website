@@ -6,6 +6,9 @@ import { MemoryStorage } from "./memory-storage";
 import { DatabaseStorage } from "./database-storage";
 import type { IStorage } from "./storage";
 
+// Simple logger (no vite dependency)
+const log = console.log;
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -36,7 +39,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   res.header("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
-    console.log("Responding to OPTIONS request");
     return res.status(200).end();
   }
 
@@ -82,20 +84,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     storage = new MemoryStorage();
   }
 
+  // Register API routes only
   const server = await registerRoutes(app, storage);
 
   const optionalEnvVars = ["VITE_STRIPE_PUBLIC_KEY", "STRIPE_SECRET_KEY"];
   const missingOptionalVars = optionalEnvVars.filter(
     (varName) => !process.env[varName]
   );
-
-  // Dynamically import log from vite only in dev
-  let log = console.log;
-  if (process.env.NODE_ENV !== "production") {
-    const viteModule = await import("./vite");
-    log = viteModule.log;
-  }
-
   if (missingOptionalVars.length > 0) {
     log(
       `⚠️  Missing optional environment variables: ${missingOptionalVars.join(
@@ -105,21 +100,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     log("Please set these environment variables for full functionality.");
   }
 
-  if (app.get("env") === "development") {
-    const { setupVite } = await import("./vite");
-    await setupVite(app, server);
-  } else {
-    // In production with separate frontend hosting, you might not need this
-    try {
-      const { serveStatic } = await import("./vite");
-      serveStatic(app);
-    } catch {
-      console.log("Static serving skipped (vite module not installed).");
-    }
-  }
-
+  // No serveStatic in production — this is now an API-only backend
   const PORT = parseInt(process.env.PORT || "5000", 10);
   server.listen(PORT, "0.0.0.0", () => {
-    log(`Server running on port ${PORT}`);
+    log(`🚀 API server running on port ${PORT}`);
   });
 })();
