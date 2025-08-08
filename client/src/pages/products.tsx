@@ -29,9 +29,6 @@ export default function ProductsPage() {
       if (selectedCategory) params.append('category', selectedCategory);
       
       const response = await apiRequest('GET', `/api/products?${params}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
       return response.json() as Promise<Product[]>;
     },
   });

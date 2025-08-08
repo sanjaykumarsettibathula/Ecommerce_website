@@ -1,7 +1,7 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-// Get API URL from environment or default to localhost
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+// Get API URL from environment or default to Render backend
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://shopulse.onrender.com';
 
 async function throwIfResNotOk(res: Response) {
   // Only throw for non-2xx responses
@@ -33,8 +33,8 @@ export async function apiRequest(
   data?: unknown | undefined,
   headers?: Record<string, string>
 ): Promise<Response> {
-  // Use proxy configuration for API requests
-  const fullUrl = url.startsWith('http') ? url : url;
+  // Build full URL for API requests
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
   
   console.log(`Making ${method} request to ${fullUrl}`);
   
