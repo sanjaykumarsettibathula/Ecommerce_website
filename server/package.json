@@ -5,8 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development tsx src/index.ts",
-    "build": "esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist && node -e \"if(process.env.NODE_ENV!=='production'){require('./copy-client-build.js')}\"",
-    "build:render": "node build-server-only.js",
+    "build": "esbuild src/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "cross-env NODE_ENV=production node dist/index.js",
     "check": "tsc",
     "db:push": "drizzle-kit push",
