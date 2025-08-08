@@ -37,13 +37,6 @@ interface ProductFormData {
   status: 'active' | 'inactive';
 }
 
-// Helper to get headers for fetch (never undefined)
-const _getHeaders = () => {
-  const token = localStorage.getItem('token');
-  const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
-  return headers;
-};
 
 function ProductForm({ product, onSuccess }: { product?: Product; onSuccess: () => void }) {
   const { toast } = useToast();
