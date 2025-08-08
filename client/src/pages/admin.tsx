@@ -38,7 +38,7 @@ interface ProductFormData {
 }
 
 // Helper to get headers for fetch (never undefined)
-const getHeaders = () => {
+const _getHeaders = () => {
   const token = localStorage.getItem('token');
   const headers: Record<string, string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
