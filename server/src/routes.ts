@@ -12,7 +12,13 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 
 // Ensure JWT_SECRET is set
 if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required');
+  console.warn('JWT_SECRET environment variable is not set. Using a fallback for development.');
+  process.env.JWT_SECRET = 'development-jwt-secret-key-change-in-production';
+}
+
+if (!process.env.SESSION_SECRET) {
+  console.warn('SESSION_SECRET environment variable is not set. Using a fallback for development.');
+  process.env.SESSION_SECRET = 'development-session-secret-key-change-in-production';
 }
 const JWT_SECRET = process.env.JWT_SECRET;
 
