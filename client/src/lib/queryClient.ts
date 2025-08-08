@@ -37,25 +37,38 @@ export async function apiRequest(
   const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
   
   console.log(`Making ${method} request to ${fullUrl}`);
+  console.log('API_BASE_URL:', API_BASE_URL);
   
   try {
-    const res = await fetch(fullUrl, {
+    const requestConfig: RequestInit = {
       method,
       headers: getAuthHeaders(data, headers),
       body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-      mode: 'cors'
-    });
+      mode: 'cors',
+      credentials: "include"
+    };
+    
+    console.log('Request config:', requestConfig);
+    
+    const res = await fetch(fullUrl, requestConfig);
     
     console.log(`Response status: ${res.status}`);
+    console.log('Response headers:', Object.fromEntries(res.headers.entries()));
+    
     if (!res.ok) {
       console.error(`Error response: ${res.statusText}`);
+      const errorText = await res.text();
+      console.error('Error body:', errorText);
     }
     
     await throwIfResNotOk(res);
     return res;
   } catch (error) {
     console.error('Fetch error:', error);
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      console.error('Network error - check if backend server is running and accessible');
+      console.error('Backend URL:', API_BASE_URL);
+    }
     throw error;
   }
 }
