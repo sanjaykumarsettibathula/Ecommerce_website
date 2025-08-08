@@ -6,14 +6,11 @@ import { MemoryStorage } from "./memory-storage";
 import { DatabaseStorage } from "./database-storage";
 import type { IStorage } from "./storage";
 
-// Logger is safe to keep here if it has no vite imports
-import { log } from "./vite";
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS middleware - simplified for development
+// CORS middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.log(`${req.method} ${req.url} - Origin: ${req.headers.origin}`);
 
@@ -91,6 +88,14 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   const missingOptionalVars = optionalEnvVars.filter(
     (varName) => !process.env[varName]
   );
+
+  // Dynamically import log from vite only in dev
+  let log = console.log;
+  if (process.env.NODE_ENV !== "production") {
+    const viteModule = await import("./vite");
+    log = viteModule.log;
+  }
+
   if (missingOptionalVars.length > 0) {
     log(
       `⚠️  Missing optional environment variables: ${missingOptionalVars.join(
@@ -101,13 +106,16 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   }
 
   if (app.get("env") === "development") {
-    // Lazy-load Vite setup only in development
     const { setupVite } = await import("./vite");
     await setupVite(app, server);
   } else {
-    // Lazy-load serveStatic only in production
-    const { serveStatic } = await import("./vite");
-    serveStatic(app);
+    // In production with separate frontend hosting, you might not need this
+    try {
+      const { serveStatic } = await import("./vite");
+      serveStatic(app);
+    } catch {
+      console.log("Static serving skipped (vite module not installed).");
+    }
   }
 
   const PORT = parseInt(process.env.PORT || "5000", 10);
