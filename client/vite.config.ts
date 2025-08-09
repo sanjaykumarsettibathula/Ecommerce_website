@@ -52,7 +52,7 @@ export default defineConfig({
   server: {
       proxy: {
         '/api': {
-          target: 'https://ridewise.onrender.com',
+          target: 'https://shopulse.onrender.com',
           changeOrigin: true,
           secure: false,
         },
