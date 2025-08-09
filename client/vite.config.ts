@@ -50,10 +50,12 @@ export default defineConfig({
     }
   },
   server: {
-    open: true,
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
+      proxy: {
+        '/api': {
+          target: 'https://ridewise.onrender.com',
+          changeOrigin: true,
+          secure: false,
+        },
+      },
     },
-  },
 });
