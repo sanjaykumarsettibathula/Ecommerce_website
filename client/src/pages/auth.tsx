@@ -262,7 +262,7 @@ export default function AuthPage() {
                   type="button"
                   variant="outline"
                   className="w-full flex items-center justify-center gap-2"
-                  onClick={() => window.location.href = `/api/auth/google`}
+                  onClick={() => window.location.href = `${import.meta.env.VITE_API_URL}/api/auth/google`}
                 >
                   <FaGoogle className="w-5 h-5" />
                   Continue with Google
