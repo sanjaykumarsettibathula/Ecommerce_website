@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
   // Google OAuth endpoints
   app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-  app.get('/api/auth/google/callback', passport.authenticate('google', { failureRedirect: '/auth?error=GoogleAuthFailed' }), (req: any, res) => {
+  app.get('/api/auth/google/callback', passport.authenticate('google', { failureRedirect: `${FRONTEND_URL}/auth?error=GoogleAuthFailed` }), (req: any, res) => {
     try {
       // Issue JWT and redirect to frontend with token
       const user = req.user;
@@ -158,10 +158,10 @@ export async function registerRoutes(app: Express, storageInstance: IStorage): P
       );
       
       // Redirect to frontend with token in query param
-      res.redirect(`/auth?token=${token}`);
+      res.redirect(`${FRONTEND_URL}/auth?token=${token}`);
     } catch (error) {
       console.error('Google OAuth callback error:', error);
-      res.redirect(`/auth?error=TokenGenerationFailed`);
+      res.redirect(`${FRONTEND_URL}/auth?error=TokenGenerationFailed`);
     }
   });
 
